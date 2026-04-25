@@ -1,9 +1,10 @@
-export function createSession({ storyId, title, synopsis = '', storyState = null, firstChunk = null, cards = [], status = 'intro' }) {
+export function createSession({ storyId, title, synopsis = '', userPrompt = '', storyState = null, firstChunk = null, cards = [], status = 'intro' }) {
   const now = new Date().toISOString();
   const session = {
     story_id: storyId,
     title,
     synopsis,
+    userPrompt,
     status,
     max_chunks: 3,
     current_chunk_index: 0,
@@ -22,6 +23,12 @@ export function createSession({ storyId, title, synopsis = '', storyState = null
     node_index: {},
     player_path: [],
     interventions: [],
+    // batch 2 预生成
+    batch_2_nodes: null,
+    batch_2_status: 'pending',  // pending | generating | done | error
+    batch_2_state_patch: null,
+    // 当前批次位置（1 = 显示 batch1，2 = 显示 batch2）
+    batch_position: 1,
     created_at: now,
     updated_at: now
   };
