@@ -4,7 +4,7 @@
  * 用户点击"开始造梦"后，或后台预生成时调用
  *
  * 流程：
- * 1. Layer 1: 生成 10+ 纯文本 fragments
+ * 1. Layer 1: 生成 4 个纯文本 fragments
  * 2. Layer 2: 一次转换所有 fragments 为 chunk JSON
  * 3. 校验、规范化、合并状态、存档
  */
@@ -41,7 +41,8 @@ function normalizeStoryState(rawState, userPrompt) {
       characters: payload.characters || [],
       facts: payload.facts || [`用户脑洞：${userPrompt}`],
       open_threads: payload.open_threads || [],
-      constraints: payload.constraints || ['不要推翻已发生事实']
+      constraints: payload.constraints || ['不要推翻已发生事实'],
+      architecture: payload.architecture || {}
     }
   };
 }
@@ -87,6 +88,7 @@ export async function beginStoryPipeline({ storyId, userPrompt }, options = {}) 
       const chunkJson = await fragmentsToChunkJson(fragments, 1, 3);
 
       chunkResult = {
+        story_state: contentParsed.story_state || {},
         state_patch: contentParsed.state_patch || {
           current_phase: 'opening_conflict',
           facts_add: [],
@@ -115,21 +117,26 @@ export async function beginStoryPipeline({ storyId, userPrompt }, options = {}) 
     chunkResult.chunk.chunk_id = 'chunk_1';
   }
 
-  // 校验图结构
-  try {
-    validateChunkGraph(chunkResult.chunk, 3);
-  } catch (e) {
-    console.warn(`[beginStoryPipeline] graph validation warning: ${e.message}`);
-  }
-
-  // 内容审核
-  try {
-    moderateChunk(chunkResult.chunk);
-  } catch (e) {
-    console.warn(`[beginStoryPipeline] moderation warning: ${e.message}`);
-  }
+  // 校验图结构与内容安全
+  validateChunkGraph(chunkResult.chunk, session.max_chunks);
+  moderateChunk(chunkResult.chunk);
 
   // 更新 story_state
+  if (chunkResult.story_state) {
+    const normalized = normalizeStoryState(chunkResult, userPrompt);
+    session.story_state = {
+      ...session.story_state,
+      ...normalized.storyState,
+      protagonist: {
+        ...(session.story_state?.protagonist || {}),
+        ...(normalized.storyState.protagonist || {})
+      },
+      architecture: {
+        ...(session.story_state?.architecture || {}),
+        ...(normalized.storyState.architecture || {})
+      }
+    };
+  }
   session.story_state = mergeStatePatch(session.story_state, chunkResult.state_patch);
 
   // 合并 chunk

@@ -1,8 +1,11 @@
+import { STORY_ARCHITECTURE, STORY_MAX_CHUNKS } from '../config/storyArchitecture.js';
+
 const GENERATE_NEXT = '__GENERATE_NEXT__';
 
 export function validateChunkGraph(chunk, maxChunks = 3) {
   const nodes = chunk.nodes || {};
   const errors = [];
+  validateArchitectureBlueprint(chunk, maxChunks, errors);
 
   if (!nodes[chunk.start_node]) {
     errors.push(`start_node ${chunk.start_node} 不存在`);
@@ -31,13 +34,13 @@ export function validateChunkGraph(chunk, maxChunks = 3) {
     }
 
     for (const choice of node.choices || []) {
+      if (/^(继续|下一步|继续剧情|继续推进|进入下一幕|进入下一段剧情|下一幕)$/i.test(choice.content || '')) {
+        errors.push(`${nodeId} 的选项不能只写“${choice.content}”，必须是具体剧情动作`);
+      }
+
       if (choice.next_node === GENERATE_NEXT) {
         hasGenerateNext = true;
         continue;
-      }
-
-      if (/^(继续|下一步|继续剧情|继续推进|进入下一幕|下一幕)$/i.test(choice.content || '')) {
-        errors.push(`${nodeId} 的普通选项不能只写“${choice.content}”，必须是具体剧情动作`);
       }
 
       if (!nodes[choice.next_node]) {
@@ -86,6 +89,41 @@ export function validateChunkGraph(chunk, maxChunks = 3) {
   }
 
   return true;
+}
+
+function validateArchitectureBlueprint(chunk, maxChunks, errors) {
+  if (maxChunks !== STORY_MAX_CHUNKS) {
+    return;
+  }
+
+  const blueprint = STORY_ARCHITECTURE.chunks[chunk.chunk_index];
+  if (!blueprint) {
+    return;
+  }
+
+  if (chunk.chunk_id !== blueprint.chunk_id) {
+    errors.push(`chunk_id 必须是 ${blueprint.chunk_id}`);
+  }
+
+  if (chunk.type !== blueprint.type) {
+    errors.push(`chunk ${chunk.chunk_index} type 必须是 ${blueprint.type}`);
+  }
+
+  if (chunk.start_node !== blueprint.start_node) {
+    errors.push(`chunk ${chunk.chunk_index} start_node 必须是 ${blueprint.start_node}`);
+  }
+
+  const actualNodeIds = Object.keys(chunk.nodes || {}).sort();
+  const expectedNodeIds = [...blueprint.nodes].sort();
+  if (actualNodeIds.join(',') !== expectedNodeIds.join(',')) {
+    errors.push(`chunk ${chunk.chunk_index} nodes 必须且只能是 ${expectedNodeIds.join('、')}`);
+  }
+
+  const actualEndNodes = [...(chunk.end_nodes || [])].sort();
+  const expectedEndNodes = [...blueprint.end_nodes].sort();
+  if (actualEndNodes.join(',') !== expectedEndNodes.join(',')) {
+    errors.push(`chunk ${chunk.chunk_index} end_nodes 必须是 ${expectedEndNodes.join('、')}`);
+  }
 }
 
 function collectReachableNodeIds(chunk) {

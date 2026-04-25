@@ -6,6 +6,7 @@
 import { callLLM } from './aiService.js';
 import { safeJsonParse } from '../utils/json.js';
 import { httpError } from '../utils/errors.js';
+import { buildArchitecturePromptSection } from '../config/storyArchitecture.js';
 
 /**
  * 将 content.fragments 转换为完整 chunk JSON
@@ -71,7 +72,7 @@ function buildToChunkJsonPromptWithFragments({ nextChunkIndex, maxChunks }, frag
   if (isChunk3) {
     return buildChunk3Prompt(fragments);
   }
-  // chunk 1: 灵活图结构，10+ 节点
+  // chunk 1: 固定伪开放图结构
   return buildChunk1Prompt(fragments);
 }
 
@@ -83,19 +84,21 @@ Convert the following text fragments into chunk_1 JSON with fixed graph structur
 
 Return ONLY JSON, no markdown, no explanation.
 
+${buildArchitecturePromptSection({ nextChunkIndex: 1 })}
+
 chunk_1 fixed graph:
 - start_node = "node_0"
 - nodes: node_0, node_1_a, node_1_b, node_2
-- node_0 -> choices: [option_a -> node_1_a, option_b -> node_1_b]
-- node_1_a -> choice: [-> node_2]
-- node_1_b -> choice: [-> node_2]
-- node_2 -> choice: [-> "__GENERATE_NEXT__"]
+- node_0 uses 片段0 text and 片段0.options: option_a -> node_1_a, option_b -> node_1_b
+- node_1_a uses 片段1 text and has one concrete action choice -> node_2
+- node_1_b uses 片段2 text and has one concrete action choice -> node_2
+- node_2 uses 片段3 text and 片段3.options: every choice -> "__GENERATE_NEXT__"
 - end_nodes = ["node_2"]
 
 Rules:
 1. Map fragments in order: 片段0->node_0, 片段1->node_1_a, 片段2->node_1_b, 片段3->node_2
-2. If fragment type is "choice_point", use its options for node choices
-3. If fragment type is "scene", choices = []
+2. Never leave reachable non-ending nodes with choices = []
+3. For node_1_a and node_1_b, write a short concrete bridge action as choice.content, not "continue"
 4. bg_theme: choose from ["light","dark","danger","victory"]
    - "light"/"dark": opening/normal scenes
    - "danger": conflict/confrontation
@@ -132,19 +135,21 @@ Convert the following text fragments into chunk_2 JSON with fixed graph structur
 
 Return ONLY JSON, no markdown, no explanation.
 
+${buildArchitecturePromptSection({ nextChunkIndex: 2 })}
+
 chunk_2 fixed graph:
 - start_node = "node_5"
 - nodes: node_5, node_6_a, node_6_b, node_7
-- node_5 -> choices: [option_a -> node_6_a, option_b -> node_6_b]
-- node_6_a -> choice: [-> node_7]
-- node_6_b -> choice: [-> node_7]
-- node_7 -> choice: [-> "__GENERATE_NEXT__"]
+- node_5 uses 片段0 text and 片段0.options: option_a -> node_6_a, option_b -> node_6_b
+- node_6_a uses 片段1 text and has one concrete action choice -> node_7
+- node_6_b uses 片段2 text and has one concrete action choice -> node_7
+- node_7 uses 片段3 text and 片段3.options: every choice -> "__GENERATE_NEXT__"
 - end_nodes = ["node_7"]
 
 Rules:
 1. Map fragments in order: 片段0->node_5, 片段1->node_6_a, 片段2->node_6_b, 片段3->node_7
-2. If fragment type is "choice_point", use its options for node choices
-3. If fragment type is "scene", choices = []
+2. Never leave reachable non-ending nodes with choices = []
+3. For node_6_a and node_6_b, write a short concrete bridge action as choice.content, not "continue"
 4. bg_theme: choose from ["light","dark","danger","victory"]
 5. ui_effect: choose based on drama action
 6. is_paywall = false, is_rewrite_point = false
@@ -172,21 +177,24 @@ Convert the following text fragments into chunk_3 JSON with fixed graph structur
 
 Return ONLY JSON, no markdown, no explanation.
 
+${buildArchitecturePromptSection({ nextChunkIndex: 3 })}
+
 chunk_3 fixed graph:
 - start_node = "node_8"
 - nodes: node_8, node_9_a, node_9_b, node_10_ending
-- node_8 -> choices: [option_a -> node_9_a, option_b -> node_9_b]
-- node_9_a -> choice: [-> node_10_ending]
-- node_9_b -> choice: [-> node_10_ending]
+- node_8 uses 片段0 text and 片段0.options: option_a -> node_9_a, option_b -> node_9_b
+- node_9_a uses 片段1 text and has one concrete final action choice -> node_10_ending
+- node_9_b uses 片段2 text and has one concrete final action choice -> node_10_ending
 - node_10_ending -> choices = [] (ending)
 - end_nodes = ["node_10_ending"]
 
 Rules:
 1. Map fragments in order: 片段0->node_8, 片段1->node_9_a, 片段2->node_9_b, 片段3->node_10_ending
 2. node_10_ending must have choices = [] (ending)
-3. bg_theme: choose from ["light","dark","danger","victory"]
-4. ui_effect: choose based on drama action
-5. is_paywall = false, is_rewrite_point = false
+3. node_10_ending must obey story_state.architecture.ending_lane if present in upstream context
+4. bg_theme: choose from ["light","dark","danger","victory"]
+5. ui_effect: choose based on drama action
+6. is_paywall = false, is_rewrite_point = false
 
 Layer 1 fragments:
 ${JSON.stringify(fragments, null, 2)}

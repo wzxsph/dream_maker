@@ -4,7 +4,6 @@ import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { initialStoryPipeline } from './services/initialStoryPipeline.js';
-import { beginStoryPipeline } from './services/beginStoryPipeline.js';
 import { continueStoryPipeline } from './services/continueStoryPipeline.js';
 import { progressiveContinuePipeline } from './services/progressiveContinuePipeline.js';
 import { loadStorySession, saveStorySession, ensureStoryDirectory } from './services/storageService.js';

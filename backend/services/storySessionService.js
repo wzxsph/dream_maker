@@ -1,3 +1,5 @@
+import { STORY_MAX_CHUNKS, buildDefaultArchitectureState } from '../config/storyArchitecture.js';
+
 export function createSession({ storyId, title, synopsis = '', userPrompt = '', storyState = null, firstChunk = null, cards = [], status = 'intro' }) {
   const now = new Date().toISOString();
   const session = {
@@ -6,7 +8,7 @@ export function createSession({ storyId, title, synopsis = '', userPrompt = '', 
     synopsis,
     userPrompt,
     status,
-    max_chunks: 3,
+    max_chunks: STORY_MAX_CHUNKS,
     current_chunk_index: 0,
     story_state: storyState || {
       genre: 'interactive_reversal',
@@ -16,19 +18,14 @@ export function createSession({ storyId, title, synopsis = '', userPrompt = '', 
       characters: [],
       facts: [],
       open_threads: [],
-      constraints: []
+      constraints: [],
+      architecture: buildDefaultArchitectureState(userPrompt)
     },
     chunks: [],
     cards,
     node_index: {},
     player_path: [],
     interventions: [],
-    // batch 2 预生成
-    batch_2_nodes: null,
-    batch_2_status: 'pending',  // pending | generating | done | error
-    batch_2_state_patch: null,
-    // 当前批次位置（1 = 显示 batch1，2 = 显示 batch2）
-    batch_position: 1,
     created_at: now,
     updated_at: now
   };

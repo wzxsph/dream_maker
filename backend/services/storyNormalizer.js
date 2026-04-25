@@ -49,7 +49,7 @@ function normalizeChoices(choices) {
 }
 
 function isGenericChoiceContent(content) {
-  return /^(继续|下一步|继续剧情|继续推进|进入下一幕|下一幕|继续吧)$/i.test(content || '');
+  return /^(继续|下一步|继续剧情|继续推进|进入下一幕|进入下一段剧情|下一幕|继续吧)$/i.test(content || '');
 }
 
 function buildConcreteChoiceContent(index, total) {
@@ -63,7 +63,7 @@ function buildConcreteChoiceContent(index, total) {
 function normalizeChoiceLabels(nodes) {
   for (const node of Object.values(nodes)) {
     node.choices = (node.choices || []).map((choice, index, choices) => {
-      if (choice.next_node !== '__GENERATE_NEXT__' && isGenericChoiceContent(choice.content)) {
+      if (isGenericChoiceContent(choice.content)) {
         return {
           ...choice,
           content: buildConcreteChoiceContent(index, choices.length)

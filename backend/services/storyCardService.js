@@ -14,7 +14,8 @@ function card(id, type, title, content) {
 
 export function buildStoryCards({ userPrompt, title, storyState }) {
   const protagonist = storyState?.protagonist || {};
-  const characters = safeList(storyState?.characters, 4);
+  const characters = safeList(storyState?.characters, 3);
+  const architecture = storyState?.architecture || {};
 
   return [
     card('card_seed', 'idea_seed', '初始脑洞', {
@@ -36,9 +37,17 @@ export function buildStoryCards({ userPrompt, title, storyState }) {
     ...characters.map((character, index) =>
       card(`card_character_${index + 1}`, 'character', character.name || `角色${index + 1}`, character)
     ),
+    card('card_architecture', 'architecture', '互动小说架构', {
+      name: architecture.name || '微场景锁结局三幕架构',
+      scene_lock: architecture.scene_lock || '单一核心场景',
+      choice_contract: architecture.choice_contract || '伪开放式选择，分支改变手段和代价',
+      ending_lane: architecture.ending_lane || 'truth_reversal',
+      ending_promise: architecture.ending_promise || ''
+    }),
     card('card_style_guide', 'style_guide', '短剧写作指南', {
-      pacing: '每 1-2 个节点出现一次信息差、反转或强情绪推进',
+      pacing: '每个节点先给可见压力，再给信息差、反转或强情绪推进',
       choice_rule: '普通节点必须提供具体动作二选一，禁止只写“继续”',
+      scene_rule: '不跳地点、不跳时间、不切换主视角，始终围绕小场景内的即时危机',
       ad_rule: '第二幕末尾插入一次抖音 AI 创变者黑客松大赛 demo 广告',
       constraints: safeList(storyState?.constraints, 4)
     })

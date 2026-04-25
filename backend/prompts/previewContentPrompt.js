@@ -6,13 +6,15 @@
  * 输出：单个 fragment 文本
  */
 
+import { buildArchitecturePromptSection, getChunkStartNodeId } from '../config/storyArchitecture.js';
+
 export function buildPreviewContentPrompt({
   storyState,
   storyCards,
   continuityContext,
   nextChunkIndex
 }) {
-  const startNodeId = nextChunkIndex === 2 ? 'node_5' : 'node_8';
+  const startNodeId = getChunkStartNodeId(nextChunkIndex);
 
   return `你是互动短剧的"下一节点预览"生成器。
 
@@ -25,6 +27,9 @@ export function buildPreviewContentPrompt({
 2. text 写成自然剧情，不要写"你刚选择了"
 3. text 控制在 50-90 字
 4. type = "scene"，options = null
+5. 遵守场景锁和 ending_lane，不跳新地点、不提前泄露结局
+
+${buildArchitecturePromptSection({ nextChunkIndex })}
 
 预览节点对应节点 ID：${startNodeId}
 

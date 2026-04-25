@@ -1,10 +1,12 @@
+import { buildArchitecturePromptSection, getChunkStartNodeId } from '../config/storyArchitecture.js';
+
 export function buildPreviewNodePrompt({
   storyState,
   storyCards,
   continuityContext,
   nextChunkIndex
 }) {
-  const startNodeId = nextChunkIndex === 2 ? 'node_5' : 'node_8';
+  const startNodeId = getChunkStartNodeId(nextChunkIndex);
 
   return `你是互动短剧的“下一节点预览”生成器。
 
@@ -19,6 +21,9 @@ export function buildPreviewNodePrompt({
 4. text 控制在 50-90 字。
 5. bg_theme 只能是 "light"、"dark"、"danger"、"victory"。
 6. choices 必须是空数组，完整选项由后台完整 chunk 生成后补齐。
+7. 预览必须遵守场景锁和 ending_lane，不跳新地点、不提前泄露结局。
+
+${buildArchitecturePromptSection({ nextChunkIndex })}
 
 当前故事状态：
 ${JSON.stringify(storyState, null, 2)}

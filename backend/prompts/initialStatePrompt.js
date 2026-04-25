@@ -1,3 +1,5 @@
+import { buildArchitecturePromptSection } from '../config/storyArchitecture.js';
+
 export function buildInitialStatePrompt(userPrompt) {
   return `你是一个互动短剧策划器。
 
@@ -11,9 +13,12 @@ export function buildInitialStatePrompt(userPrompt) {
 5. 故事适合 3-5 分钟短体验。
 6. 风格要高冲突、强反转、短平快。
 7. 不要包含违法、色情、过度血腥、政治敏感内容。
+8. 必须使用下方短篇互动小说架构，选择一个 ending_lane 并写入 architecture。
 
 用户脑洞：
 ${userPrompt}
+
+${buildArchitecturePromptSection()}
 
 返回格式：
 {
@@ -29,6 +34,14 @@ ${userPrompt}
   "characters": [],
   "facts": [],
   "open_threads": [],
-  "constraints": []
+  "constraints": [],
+  "architecture": {
+    "id": "micro_scene_locked_3_act",
+    "name": "微场景锁结局三幕架构",
+    "scene_lock": "单一核心场景，最多扩展到一个相邻小空间",
+    "choice_contract": "玩家选择改变手段和代价，不改变结局走向",
+    "ending_lane": "truth_reversal | price_escape | role_swap",
+    "ending_promise": ""
+  }
 }`;
 }

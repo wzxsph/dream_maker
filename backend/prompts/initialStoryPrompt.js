@@ -1,3 +1,5 @@
+import { buildArchitecturePromptSection } from '../config/storyArchitecture.js';
+
 export function buildInitialStoryPrompt(userPrompt) {
   return `你是一个互动短剧策划器和剧情节点生成器。
 
@@ -8,9 +10,11 @@ export function buildInitialStoryPrompt(userPrompt) {
 用户脑洞：
 ${userPrompt}
 
+${buildArchitecturePromptSection({ nextChunkIndex: 1 })}
+
 要求：
 1. title 简短有冲突感，不超过 12 个字。
-2. story_state 只保存摘要，不要保存完整正文。
+2. story_state 只保存摘要，不要保存完整正文，并必须包含 architecture 字段。
 3. characters、facts、open_threads、constraints 每项最多 2 条。
 4. chunk 必须是第一段开局冲突。
 5. 固定生成 4 个节点：node_0、node_1_a、node_1_b、node_2。
@@ -27,9 +31,10 @@ ${userPrompt}
 16. bg_theme 只能是 "light"、"dark"、"danger"、"victory"。
 17. 每个非结局节点最多 2 个 choices。
 18. 第一段不要完结故事，不要生成广告节点。
-19. 剧情节奏短平快，高冲突、强反转。
+19. 剧情节奏短平快，高冲突、强反转，始终遵守微场景锁。
 20. 普通 choices[].content 必须是具体动作，严禁只写“继续”“下一步”“进入下一幕”。
 21. 不要包含违法、色情、过度血腥、政治敏感内容。
+22. story_state.architecture.ending_lane 必须从 truth_reversal、price_escape、role_swap 中选择一个。
 
 返回格式：
 {
@@ -46,7 +51,15 @@ ${userPrompt}
     "characters": [],
     "facts": [],
     "open_threads": [],
-    "constraints": []
+    "constraints": [],
+    "architecture": {
+      "id": "micro_scene_locked_3_act",
+      "name": "微场景锁结局三幕架构",
+      "scene_lock": "单一核心场景，最多扩展到一个相邻小空间",
+      "choice_contract": "玩家选择改变手段和代价，不改变结局走向",
+      "ending_lane": "truth_reversal | price_escape | role_swap",
+      "ending_promise": ""
+    }
   },
   "state_patch": {
     "current_phase": "",

@@ -6,6 +6,8 @@
  * 输出：state_patch + content（纯文本 fragments）
  */
 
+import { buildArchitecturePromptSection } from '../config/storyArchitecture.js';
+
 export function buildContinueContentPrompt({
   storyState,
   storyCards,
@@ -38,6 +40,8 @@ ${intervention || '无'}
 nextChunkIndex：${nextChunkIndex}
 maxChunks：${maxChunks}
 
+${buildArchitecturePromptSection({ nextChunkIndex })}
+
 衔接硬规则：
 1. 必须把 continuityContext.current_node_text 视为上一幕最后发生的画面
 2. 必须把 continuityContext.selected_choice 视为玩家刚刚做出的动作
@@ -50,13 +54,16 @@ maxChunks：${maxChunks}
 
 剧情要求：
 1. 生成 4 个片段，使用顺序 ID：片段0、片段1、片段2、片段3
-2. 如果 nextChunkIndex < maxChunks（不是结局幕），最后一个片段（片段3）必须是 type = "choice_point"，options 包含 2 个动作文案，next_node = "__GENERATE_NEXT__"
-3. 如果 nextChunkIndex === maxChunks（结局幕），最后一个片段（片段3）必须是 type = "ending"，options = []
-4. 每个 fragment.text 控制在 50-110 字
-5. 保持高冲突、强反转、短平快
-6. 不要引入过多新角色
-7. 不要主动生成广告节点，广告节点由后端统一插入
-8. choices 动作文案要有剧情动作感，如"当众揭穿她的谎言""先假装妥协套出真相"
+2. 片段0 是本幕开场行动选择点（type = "choice_point"），options 包含 2 个动作文案
+3. 片段1 是选项A造成的直接后果，片段2 是选项B造成的直接后果，二者都为 type = "scene"
+4. 如果 nextChunkIndex < maxChunks（不是结局幕），片段3 必须是续写锁点（type = "choice_point"），options 包含 1-2 个动作文案
+5. 如果 nextChunkIndex === maxChunks（结局幕），片段3 必须是 type = "ending"，options = []
+6. 每个 fragment.text 控制在 50-110 字
+7. 保持高冲突、强反转、短平快，并遵守单一小场景
+8. 不要引入过多新角色
+9. 不要主动生成广告节点，广告节点由后端统一插入
+10. choices 动作文案要有剧情动作感，如"当众揭穿她的谎言""先假装妥协套出真相"
+11. 分支只改变手段、代价、谁先暴露，不能改变 story_state.architecture.ending_lane
 
 ${isChunk2 ? `
 第二幕节点 ID 映射规则（供后续转换层使用）：
@@ -98,7 +105,7 @@ ${JSON.stringify(recentNodes, null, 2)}
   "content": {
     "phase": "${isChunk2 ? 'middle' : isChunk3 ? 'ending' : 'climax'}",
     "fragments": [
-      { "id": "片段0", "text": "剧情文字...", "type": "scene", "options": null },
+      { "id": "片段0", "text": "剧情文字...", "type": "choice_point", "options": ["选项A", "选项B"] },
       { "id": "片段1", "text": "剧情文字...", "type": "scene", "options": null },
       { "id": "片段2", "text": "剧情文字...", "type": "scene", "options": null },
       { "id": "片段3", "text": "剧情文字...", "type": "${isChunk3 ? 'ending' : 'choice_point'}", "options": ${isChunk3 ? '[]' : '["选项A", "选项B"]'} }

@@ -37,11 +37,11 @@ function buildMockChunk2({ intervention, choiceContent }) {
       chunk_id: 'chunk_2',
       chunk_index: 2,
       type: 'middle',
-      start_node: 'node_4',
-      end_nodes: ['node_paywall_1'],
+      start_node: 'node_5',
+      end_nodes: ['node_7'],
       nodes: {
-        node_4: {
-          node_id: 'node_4',
+        node_5: {
+          node_id: 'node_5',
           text: `${interventionLine(intervention)}监控画面被投到墙上，林婉儿伸手推你的动作清清楚楚。${hasMindVoice ? '更可怕的是，你忽然听见她心里的尖叫：不可能，监控不是早就坏了吗？' : '她脸上的泪光僵住，像一张被撕开的假面。'}`,
           bg_theme: 'dark',
           ui_effect: ['glitch'],
@@ -52,16 +52,16 @@ function buildMockChunk2({ intervention, choiceContent }) {
           choices: [
             {
               content: '把监控声音也放出来',
-              next_node: 'node_5_a'
+              next_node: 'node_6_a'
             },
             {
               content: '盯着林婉儿，让她自己解释',
-              next_node: 'node_5_b'
+              next_node: 'node_6_b'
             }
           ]
         },
-        node_5_a: {
-          node_id: 'node_5_a',
+        node_6_a: {
+          node_id: 'node_6_a',
           text: '音频被打开，林婉儿压低声音说的那句“只要她摔下去，所有人都会站在我这边”清晰传出。客厅瞬间死寂，顾沉的脸色一点点白了下去。',
           bg_theme: 'danger',
           ui_effect: ['flash_red', 'shake'],
@@ -72,16 +72,16 @@ function buildMockChunk2({ intervention, choiceContent }) {
           choices: [
             {
               content: '要求顾沉当场道歉',
-              next_node: 'node_paywall_1'
+              next_node: 'node_7'
             },
             {
               content: '直接报警，把证据发给所有人',
-              next_node: 'node_paywall_1'
+              next_node: 'node_7'
             }
           ]
         },
-        node_5_b: {
-          node_id: 'node_5_b',
+        node_6_b: {
+          node_id: 'node_6_b',
           text: '林婉儿被你看得后退半步，却还想哭。你轻声提醒她：“这次，所有摄像头都开着。”她的哭声断在喉咙里，顾沉终于意识到自己从头到尾都站错了位置。',
           bg_theme: 'dark',
           ui_effect: ['glitch'],
@@ -92,16 +92,16 @@ function buildMockChunk2({ intervention, choiceContent }) {
           choices: [
             {
               content: '逼她说出幕后交易',
-              next_node: 'node_paywall_1'
+              next_node: 'node_7'
             },
             {
               content: '转身离开，让她自己崩盘',
-              next_node: 'node_paywall_1'
+              next_node: 'node_7'
             }
           ]
         },
-        node_paywall_1: {
-          node_id: 'node_paywall_1',
+        node_7: {
+          node_id: 'node_7',
           text: '就在真相即将彻底公开时，世界忽然卡顿。刺耳警报在你脑海里炸开：【剧情权限被世界意志暂时锁定。】林婉儿的表情停在惊恐的一瞬，而你知道，下一步就是彻底反击。',
           bg_theme: 'danger',
           ui_effect: ['flash_red', 'glitch', 'shake'],
@@ -182,7 +182,7 @@ function buildMockChunk3({ intervention, choiceContent }) {
           is_rewrite_point: false,
           choices: [
             {
-              content: '走向新的命运',
+              content: '当众收回自己的名字',
               next_node: 'node_10_ending'
             }
           ]
@@ -198,7 +198,7 @@ function buildMockChunk3({ intervention, choiceContent }) {
           is_rewrite_point: false,
           choices: [
             {
-              content: '收回自己的人生',
+              content: '亲手关闭这场审判',
               next_node: 'node_10_ending'
             }
           ]

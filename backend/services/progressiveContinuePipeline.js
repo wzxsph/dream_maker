@@ -8,6 +8,7 @@ import { loadStorySession } from './storageService.js';
 import { validateIntervention } from './moderationService.js';
 import { startGenerationJob } from './generationJobService.js';
 import { httpError } from '../utils/errors.js';
+import { getChunkStartNodeId } from '../config/storyArchitecture.js';
 
 export async function progressiveContinuePipeline({
   storyId,
@@ -102,7 +103,7 @@ async function generatePreviewNode({ session, continuityContext, nextChunkIndex 
 }
 
 function buildFallbackPreviewNode({ continuityContext, nextChunkIndex }) {
-  const nodeId = nextChunkIndex === 2 ? 'node_5' : 'node_8';
+  const nodeId = getChunkStartNodeId(nextChunkIndex);
   const selectedChoice = continuityContext.selected_choice || '';
   const text = /等待|继续|下一幕|后续/.test(selectedChoice)
     ? '短暂的沉默后，眼前的局势先一步发生变化。新的危机正在靠近，而你已经没有退路。'

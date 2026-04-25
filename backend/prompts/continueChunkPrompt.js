@@ -1,3 +1,5 @@
+import { buildArchitecturePromptSection } from '../config/storyArchitecture.js';
+
 export function buildContinueChunkPrompt({
   storyState,
   storyCards,
@@ -9,6 +11,8 @@ export function buildContinueChunkPrompt({
   nextChunkIndex,
   maxChunks
 }) {
+  const chunkType = nextChunkIndex >= maxChunks ? 'ending' : 'middle';
+
   return `你是一个互动短剧续写引擎。
 
 请根据当前故事状态、轻量作品卡片、衔接上下文、最近剧情、用户刚才选择，以及可选的用户剧情干预，生成下一段互动剧情。
@@ -20,18 +24,20 @@ export function buildContinueChunkPrompt({
 4. 用户干预是可选的。
 5. 如果没有用户干预，就自然延续当前剧情。
 6. 如果有用户干预，必须在下一段剧情中体现，但不能推翻已发生事实。
-7. 生成 3-4 个节点。
+7. 固定生成 4 个节点，节点 ID 必须服从下方当前幕图结构。
 8. 每个非结局节点最多 2 个 choices。
 9. 每个 node 的 bg_theme 只能从 "light"、"dark"、"danger"、"victory" 中选择。
 10. 每个 node.text 控制在 50-110 字。
-11. 不要引入过多新角色。
-12. 保持高冲突、强反转、短平快。
+11. 不要引入过多新角色，不新增第二个主要场景。
+12. 保持高冲突、强反转、短平快，每个节点都要有可见压力或信息差。
 13. 如果 nextChunkIndex 小于 maxChunks，至少一个末尾选择的 next_node 必须是 "__GENERATE_NEXT__"。
 14. 如果 nextChunkIndex 等于 maxChunks，必须生成至少一个结局节点，结局节点 choices = []。
 15. 不要主动生成真实广告内容，chunk_2 的广告节点由后端统一插入。
 16. 严禁使用 next_nodes、nextNode、speaker 字段表达跳转；只能使用 choices 数组。
 17. 非结局节点的 choices 不能是空数组，必须给出具体动作文案，不要写“继续”“下一步”“进入下一幕”。
 18. 每个 choices[].content 必须是有剧情动作的短句，例如“当众揭穿她的谎言”“先假装妥协套出真相”。
+19. 分支是伪开放式：A/B 分支的情绪、代价、信息不同，但必须在本 chunk 的汇聚节点重新合流。
+20. 如果当前故事状态有 architecture.ending_lane，必须沿着该结局走向推进，不允许临时换结局类型。
 
 剧情衔接硬规则：
 1. 必须把“衔接上下文.current_node_text”视为上一幕最后发生的画面。
@@ -49,7 +55,7 @@ export function buildContinueChunkPrompt({
 - node_5 必须有 2 个 choices，分别指向 node_6_a 和 node_6_b
 - node_6_a 必须至少有 1 个 choice 指向 node_7
 - node_6_b 必须至少有 1 个 choice 指向 node_7
-- node_7 必须有 1 个 choice，next_node = "__GENERATE_NEXT__"
+- node_7 是更大危机的续写锁点，必须有 1-2 个具体动作 choices，next_node 都是 "__GENERATE_NEXT__"
 - end_nodes = ["node_7"]
 
 当 nextChunkIndex = 3 时，固定使用以下图结构：
@@ -58,7 +64,7 @@ export function buildContinueChunkPrompt({
 - node_8 必须有 2 个 choices，分别指向 node_9_a 和 node_9_b
 - node_9_a 必须至少有 1 个 choice 指向 node_10_ending
 - node_9_b 必须至少有 1 个 choice 指向 node_10_ending
-- node_10_ending 必须 choices = []
+- node_10_ending 必须 choices = []，必须按 story_state.architecture.ending_lane 完成收束
 - end_nodes = ["node_10_ending"]
 
 当前故事状态：
@@ -88,6 +94,13 @@ ${nextChunkIndex}
 maxChunks:
 ${maxChunks}
 
+${buildArchitecturePromptSection({ nextChunkIndex })}
+
+story_state.architecture 是全局硬约束：
+- ending_lane 决定最终结局走向，续写和改写都不能更换 ending_lane
+- scene_lock 决定故事只能在同一核心场景或相邻小空间推进
+- choice_contract 决定分支只改变手段、代价、谁先暴露，最终必须在本 chunk 内汇聚
+
 返回格式：
 {
   "state_patch": {
@@ -100,7 +113,7 @@ ${maxChunks}
   "chunk": {
     "chunk_id": "chunk_${nextChunkIndex}",
     "chunk_index": ${nextChunkIndex},
-    "type": "middle | climax | ending",
+    "type": "${chunkType}",
     "start_node": "${nextChunkIndex === 2 ? 'node_5' : 'node_8'}",
     "end_nodes": [],
     "nodes": {}

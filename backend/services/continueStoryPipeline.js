@@ -52,30 +52,6 @@ export async function continueStoryPipeline({
     }
   }
 
-  // 特殊处理：node_2 + batch1 已显示 → 返回预先生成的 batch2 节点
-  if (currentNodeId === 'node_2' && session.batch_position === 1 && session.batch_2_nodes) {
-    // 合并 batch_2_nodes 到现有 chunk
-    const batch2Nodes = session.batch_2_nodes;
-    const currentChunk = session.chunks.find((c) => c.chunk_index === 1);
-    if (currentChunk) {
-      Object.assign(currentChunk.nodes, batch2Nodes);
-      // 更新 end_nodes 为 batch2 的最后节点
-      currentChunk.end_nodes = ['node_4'];
-    }
-    session.batch_position = 2;
-    session.batch_2_nodes = null;
-
-    recordPlayerChoice(session, { currentNodeId, choiceContent });
-
-    await saveStorySession(session);
-    return {
-      story_id: session.story_id,
-      chunk: currentChunk,
-      story_state: session.story_state,
-      is_batch2: true
-    };
-  }
-
   const normalizedMode = mode === 'rewrite' ? 'rewrite' : 'continue';
   const normalizedIntervention =
     normalizedMode === 'rewrite' ? validateIntervention(intervention) : '';
