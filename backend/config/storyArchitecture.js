@@ -12,13 +12,12 @@ export const STORY_ARCHITECTURE = {
   },
   choice_contract: {
     mode: '伪开放式',
-    rule: '玩家选择改变手段、代价、谁先暴露，不改变故事必须收束的结局走向',
-    rewrite_rule: '玩家改写只能作为下一幕新变量出现，不能推翻已发生事实、场景锁和结局走向'
+    rule: '玩家选择改变手段、代价、谁先暴露，不改变故事必须收束的结局走向'
   },
   fun_loop: [
     '每个节点先给可见压力，再给一个信息差或反转',
     '每个选项都是具体动作，禁止只写继续、下一步、进入下一幕',
-    '每幕末尾必须留下一个更强的钩子，让用户愿意点继续或改写'
+    '每幕末尾必须留下一个更强的钩子，让用户愿意进入下一幕'
   ],
   ending_lanes: [
     {
@@ -125,7 +124,6 @@ export function buildArchitecturePromptSection({ nextChunkIndex = null } = {}) {
 - 角色锁：${STORY_ARCHITECTURE.scene_contract.cast_limit}
 - 叙事锁：${STORY_ARCHITECTURE.scene_contract.world_rule}
 - 交互方式：${STORY_ARCHITECTURE.choice_contract.mode}。${STORY_ARCHITECTURE.choice_contract.rule}
-- 改写边界：${STORY_ARCHITECTURE.choice_contract.rewrite_rule}
 - 爽感循环：${STORY_ARCHITECTURE.fun_loop.join('；')}
 - 结局走向只能从以下三类选一并贯穿全文：
   1. truth_reversal：${STORY_ARCHITECTURE.ending_lanes[0].rule}

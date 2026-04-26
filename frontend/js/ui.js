@@ -12,7 +12,6 @@ const els = {
   storyPage: document.getElementById('storyPage'),
   introTitle: document.getElementById('introTitle'),
   introSynopsis: document.getElementById('introSynopsis'),
-  beginBtn: document.getElementById('beginBtn'),
   countdownHint: document.getElementById('countdownHint'),
   progressFill: document.getElementById('progressFill'),
   progressSteps: document.querySelectorAll('.progress-step'),
@@ -23,7 +22,6 @@ const els = {
   loadingOverlay: document.getElementById('loadingOverlay'),
   loadingText: document.getElementById('loadingText'),
   continuePanel: document.getElementById('continuePanel'),
-  rewriteModal: document.getElementById('rewriteModal'),
   adModal: document.getElementById('adModal'),
   adTitle: document.getElementById('adTitle'),
   adDescription: document.getElementById('adDescription'),
@@ -96,45 +94,6 @@ export function setGenerationProgress(session = {}) {
     step.classList.toggle('done', index < doneCount);
     step.classList.toggle('active', index === doneCount && doneCount < 4);
   }
-}
-
-export function setBeginButtonEnabled(enabled, label = '开始造梦') {
-  els.beginBtn.disabled = !enabled;
-  els.beginBtn.textContent = enabled ? label : '正在准备';
-  els.beginBtn.classList.toggle('counting', !enabled);
-}
-
-let countdownTimer = null;
-
-export function startBeginCountdown(seconds = 10, onCountdownEnd) {
-  let left = seconds;
-  els.beginBtn.classList.add('counting');
-  els.beginBtn.disabled = true;
-  els.beginBtn.textContent = `${left}s 后开始`;
-  els.countdownHint.textContent = '故事生成中，请稍候...';
-
-  window.clearInterval(countdownTimer);
-  countdownTimer = window.setInterval(() => {
-    left -= 1;
-    if (left <= 0) {
-      window.clearInterval(countdownTimer);
-      els.beginBtn.textContent = '开始造梦';
-      els.beginBtn.classList.remove('counting');
-      els.beginBtn.disabled = false;
-      els.countdownHint.textContent = '';
-      onCountdownEnd?.();
-    } else {
-      els.beginBtn.textContent = `${left}s 后开始`;
-    }
-  }, 1000);
-}
-
-export function resetBeginButton() {
-  window.clearInterval(countdownTimer);
-  els.beginBtn.classList.remove('counting');
-  els.beginBtn.disabled = false;
-  els.beginBtn.textContent = '开始造梦';
-  els.countdownHint.textContent = '生成中，请稍候...';
 }
 
 export function renderNode(node) {
@@ -238,14 +197,6 @@ export function hideContinuePanel() {
   els.continuePanel.classList.add('hidden');
 }
 
-export function showRewriteModal() {
-  els.rewriteModal.classList.remove('hidden');
-}
-
-export function hideRewriteModal() {
-  els.rewriteModal.classList.add('hidden');
-}
-
 export function showPresetAd(adConfig = {}, onUnlocked) {
   const duration = Number(adConfig.duration || 5);
   let left = duration;
@@ -281,22 +232,45 @@ export function showPresetAd(adConfig = {}, onUnlocked) {
 export function showReviewModal(nodes, onSelect) {
   els.reviewNodeList.innerHTML = '';
 
-  for (const node of nodes) {
-    const button = document.createElement('button');
-    button.className = 'review-node-btn';
-    button.type = 'button';
+  const map = buildReviewGroups(nodes);
+  for (const group of map) {
+    const section = document.createElement('section');
+    section.className = 'review-act';
 
-    const id = document.createElement('span');
-    id.textContent = node.node_id;
-    const text = document.createElement('b');
-    text.textContent = node.text || node.content || '空白节点';
+    const header = document.createElement('div');
+    header.className = 'review-act-header';
+    const label = document.createElement('span');
+    label.textContent = group.label;
+    const title = document.createElement('b');
+    title.textContent = group.title;
+    header.append(label, title);
 
-    button.append(id, text);
-    button.addEventListener('click', () => {
-      hideReviewModal();
-      onSelect?.(node.node_id);
-    });
-    els.reviewNodeList.appendChild(button);
+    const tree = document.createElement('div');
+    tree.className = 'review-tree';
+
+    for (const node of group.nodes) {
+      const button = document.createElement('button');
+      button.className = `review-node-btn review-depth-${getReviewDepth(node.node_id)}`;
+      button.type = 'button';
+
+      const meta = document.createElement('span');
+      meta.className = 'review-node-meta';
+      meta.textContent = formatNodeLabel(node.node_id);
+      const text = document.createElement('b');
+      text.textContent = node.text || node.content || '空白节点';
+      const route = document.createElement('small');
+      route.textContent = formatChoiceRoute(node);
+
+      button.append(meta, text, route);
+      button.addEventListener('click', () => {
+        hideReviewModal();
+        onSelect?.(node.node_id);
+      });
+      tree.appendChild(button);
+    }
+
+    section.append(header, tree);
+    els.reviewNodeList.appendChild(section);
   }
 
   els.reviewModal.classList.remove('hidden');
@@ -304,6 +278,69 @@ export function showReviewModal(nodes, onSelect) {
 
 export function hideReviewModal() {
   els.reviewModal.classList.add('hidden');
+}
+
+function buildReviewGroups(nodes) {
+  const groups = [
+    { label: '第一幕', title: '开场陷阱', nodes: [] },
+    { label: '第二幕', title: '中段反转', nodes: [] },
+    { label: '第三幕', title: '收束结尾', nodes: [] }
+  ];
+
+  for (const node of nodes) {
+    const number = getNodeNumber(node.node_id);
+    if (number >= 8) {
+      groups[2].nodes.push(node);
+    } else if (number >= 5) {
+      groups[1].nodes.push(node);
+    } else {
+      groups[0].nodes.push(node);
+    }
+  }
+
+  return groups.filter((group) => group.nodes.length > 0);
+}
+
+function getNodeNumber(nodeId = '') {
+  const match = nodeId.match(/^node_(\d+)/);
+  return match ? Number(match[1]) : 0;
+}
+
+function getReviewDepth(nodeId = '') {
+  if (/_a$/.test(nodeId)) {
+    return 1;
+  }
+  if (/_b$/.test(nodeId)) {
+    return 2;
+  }
+  if (/ending$/.test(nodeId) || /_2$|_7$/.test(nodeId)) {
+    return 3;
+  }
+  return 0;
+}
+
+function formatNodeLabel(nodeId = '') {
+  if (/ending$/.test(nodeId)) {
+    return '结局';
+  }
+  if (/_a$/.test(nodeId)) {
+    return '分支 A';
+  }
+  if (/_b$/.test(nodeId)) {
+    return '分支 B';
+  }
+  if (/_2$|_7$/.test(nodeId)) {
+    return '汇合';
+  }
+  return '起点';
+}
+
+function formatChoiceRoute(node) {
+  const choices = node.choices || [];
+  if (choices.length === 0) {
+    return '终点';
+  }
+  return choices.map((choice) => choice.content).join(' / ');
 }
 
 export function applyTheme(bgTheme = 'dark') {

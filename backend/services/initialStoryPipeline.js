@@ -144,7 +144,11 @@ async function generateFullStory({ storyId, userPrompt }) {
     session.generated_chunk_count = session.chunks?.length || 0;
     await saveStorySession(session);
 
-    const openingResult = await generateOpeningChunkResult({ userPrompt });
+    const openingResult = await generateOpeningChunkResult({
+      userPrompt,
+      title: session.title,
+      synopsis: session.synopsis
+    });
 
     // 合并到 session
     session.story_state = mergeInitialStoryState(session.story_state, openingResult.story_state);
@@ -189,11 +193,11 @@ async function generateFullStory({ storyId, userPrompt }) {
   }
 }
 
-async function generateOpeningChunkResult({ userPrompt }) {
+async function generateOpeningChunkResult({ userPrompt, title, synopsis }) {
   const { buildStoryContentPrompt } = await import('../prompts/storyContentPrompt.js');
   const contentText = await callLLM({
     systemPrompt: '你是一个互动短剧策划器，只返回严格 JSON。',
-    userPrompt: buildStoryContentPrompt(userPrompt),
+    userPrompt: buildStoryContentPrompt({ userPrompt, title, synopsis }),
     maxTokens: 2048,
     temperature: 1.0
   });

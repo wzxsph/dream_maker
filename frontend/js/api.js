@@ -29,12 +29,6 @@ export function createStory(prompt) {
   });
 }
 
-export function beginStory(storyId) {
-  return request(`/api/stories/${encodeURIComponent(storyId)}/begin`, {
-    method: 'POST'
-  });
-}
-
 export function getStory(storyId) {
   return request(`/api/stories/${encodeURIComponent(storyId)}`);
 }

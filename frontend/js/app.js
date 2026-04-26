@@ -1,4 +1,4 @@
-import { createStory, beginStory, getStory, continueStory, continueStoryProgressive, getGenerationJob } from './api.js';
+import { createStory, getStory, continueStory, continueStoryProgressive, getGenerationJob } from './api.js';
 import {
   choose,
   clearPendingChoice,
@@ -13,9 +13,7 @@ import {
 import {
   hideContinuePanel,
   hideLoading,
-  hideRewriteModal,
   renderNode,
-  setBeginButtonEnabled,
   setChoiceHandler,
   setGenerationProgress,
   setStoryTitle,
@@ -27,11 +25,8 @@ import {
   hideIntroPage,
   setIntroContent,
   setCountdownHint,
-  startBeginCountdown,
-  resetBeginButton,
   showLoading,
   showPresetAd,
-  showRewriteModal,
   showStoryPage,
   showToast
 } from './ui.js';
@@ -41,18 +36,16 @@ const promptInput = document.getElementById('promptInput');
 const generateBtn = document.getElementById('generateBtn');
 const hotPromptButtons = document.querySelectorAll('.hot-prompt');
 const continueBtn = document.getElementById('continueBtn');
-const rewriteBtn = document.getElementById('rewriteBtn');
 const cancelContinueBtn = document.getElementById('cancelContinueBtn');
-const submitRewriteBtn = document.getElementById('submitRewriteBtn');
-const skipRewriteBtn = document.getElementById('skipRewriteBtn');
-const interventionInput = document.getElementById('interventionInput');
 const backHomeBtn = document.getElementById('backHomeBtn');
 const reviewBtn = document.getElementById('reviewBtn');
 const closeReviewBtn = document.getElementById('closeReviewBtn');
-const beginBtn = document.getElementById('beginBtn');
 let activePaywallNodeId = null;
 const activeJobs = new Set();
 let storyStatusPollTimer = null;
+let introShownAt = 0;
+let autoEnterTimer = null;
+const MIN_INTRO_VISIBLE_MS = 5200;
 
 function delay(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -70,6 +63,30 @@ function isStoryGenerated(session) {
 function syncViewportHeight() {
   const height = window.visualViewport?.height || window.innerHeight;
   document.documentElement.style.setProperty('--app-height', `${height}px`);
+}
+
+function clearAutoEnterTimer() {
+  window.clearTimeout(autoEnterTimer);
+  autoEnterTimer = null;
+}
+
+function showIntroProgress({ resetTimer = false } = {}) {
+  if (resetTimer || !introShownAt) {
+    introShownAt = Date.now();
+  }
+  showIntroPage();
+}
+
+function scheduleStoryReady(storyId, session) {
+  stopIntroPolling();
+  clearAutoEnterTimer();
+  const elapsed = introShownAt ? Date.now() - introShownAt : MIN_INTRO_VISIBLE_MS;
+  const remaining = Math.max(0, MIN_INTRO_VISIBLE_MS - elapsed);
+  setGenerationProgress(session);
+  setCountdownHint(remaining > 0 ? '第一幕已准备好，正在进入...' : '正在进入第一幕...');
+  autoEnterTimer = window.setTimeout(() => {
+    showStoryReady(storyId, session);
+  }, remaining);
 }
 
 function persistCurrentNode() {
@@ -128,32 +145,36 @@ async function handleCreateStory() {
   try {
     state.storyId = null;
     stopIntroPolling();
-    setBeginButtonEnabled(false);
+    clearAutoEnterTimer();
     setIntroContent({
       title: '正在生成标题...',
       synopsis: '正在把你的脑洞压缩成一场短剧，标题和简介出来后会先展示在这里。'
     });
     setGenerationProgress({ intro_ready: false, generated_chunk_count: 0 });
     setCountdownHint(buildGenerationHint({ intro_ready: false }));
-    showIntroPage();
+    showIntroProgress({ resetTimer: true });
 
     const result = await createStory(prompt);
     console.log('[handleCreateStory] got result:', result.story_id, result.title);
 
     // 跳转到 intro 页面，显示标题+简介
     state.storyId = result.story_id;
-    setBeginButtonEnabled(true);
     setIntroContent({ title: result.title, synopsis: result.synopsis });
     setGenerationProgress(result);
     setCountdownHint(buildGenerationHint(result));
-    showIntroPage();
+    showIntroProgress();
     console.log('[handleCreateStory] intro page shown, setting hash...');
 
     // 更新 hash
-    window.location.hash = `#/story/${encodeURIComponent(result.story_id)}`;
+    const nextHash = `#/story/${encodeURIComponent(result.story_id)}`;
+    if (window.location.hash === nextHash) {
+      loadStory(result.story_id);
+    } else {
+      window.location.hash = nextHash;
+    }
     console.log('[handleCreateStory] hash set to:', window.location.hash);
   } catch (error) {
-    setBeginButtonEnabled(true);
+    clearAutoEnterTimer();
     showHomePage();
     showToast(error.message || '梦境生成失败，请换个脑洞试试');
   } finally {
@@ -179,17 +200,25 @@ async function loadStory(storyId) {
         setIntroContent({ title: session.title, synopsis: session.synopsis || '' });
         setGenerationProgress(session);
         setCountdownHint(buildGenerationHint(session));
-        showIntroPage();
-        startIntroPolling(storyId);
+        showIntroProgress();
+        if (isStoryGenerated(session)) {
+          scheduleStoryReady(storyId, session);
+        } else {
+          startIntroPolling(storyId);
+        }
         break;
 
       case 'countdown':
-        // 用户已点击开始造梦，等待倒计时结束
+        // 兼容旧 session 状态，按自动进入流程处理
         setIntroContent({ title: session.title, synopsis: session.synopsis || '' });
         setGenerationProgress(session);
         setCountdownHint(buildGenerationHint(session));
-        showIntroPage();
-        startIntroPolling(storyId);
+        showIntroProgress();
+        if (isStoryGenerated(session)) {
+          scheduleStoryReady(storyId, session);
+        } else {
+          startIntroPolling(storyId);
+        }
         break;
 
       case 'generating':
@@ -197,8 +226,12 @@ async function loadStory(storyId) {
         setIntroContent({ title: session.title, synopsis: session.synopsis || '' });
         setGenerationProgress(session);
         setCountdownHint(buildGenerationHint(session));
-        showIntroPage();
-        startIntroPolling(storyId);
+        showIntroProgress();
+        if (isStoryGenerated(session)) {
+          scheduleStoryReady(storyId, session);
+        } else {
+          startIntroPolling(storyId);
+        }
         break;
 
       case 'error':
@@ -230,6 +263,8 @@ async function loadStory(storyId) {
 
 async function showStoryReady(storyId, session) {
   stopIntroPolling();
+  clearAutoEnterTimer();
+  introShownAt = 0;
   initStory(session);
   setStoryTitle(session.title);
 
@@ -247,52 +282,6 @@ async function showStoryReady(storyId, session) {
   renderCurrentNode();
 }
 
-// ====================== 开始按钮 + 倒计时 ======================
-
-async function handleBeginStory() {
-  console.log('[handleBeginStory] called, state.storyId:', state.storyId);
-  if (!state.storyId) {
-    console.warn('[handleBeginStory] no storyId, returning early');
-    return;
-  }
-
-  // 通知后端用户已点击开始
-  try {
-    console.log('[handleBeginStory] calling beginStory API...');
-    const r = await beginStory(state.storyId);
-    console.log('[handleBeginStory] beginStory response:', r);
-  } catch (error) {
-    console.warn('beginStory API warning:', error.message);
-  }
-
-  // 开始 10 秒倒计时
-  console.log('[handleBeginStory] starting countdown...');
-  startBeginCountdown(12, async () => {
-    console.log('[handleBeginStory] countdown ended, waiting for story ready...');
-    // 倒计时结束，查询故事是否就绪
-    await waitForStoryReady(state.storyId);
-  });
-}
-
-async function waitForStoryReady(storyId) {
-  console.log('[waitForStoryReady] checking story:', storyId);
-  const session = await getStory(storyId);
-  console.log('[waitForStoryReady] status:', session.status, 'chunks:', session.chunks?.length);
-  setGenerationProgress(session);
-  setCountdownHint(buildGenerationHint(session));
-  if (isStoryGenerated(session)) {
-    console.log('[waitForStoryReady] calling showStoryReady');
-    showStoryReady(storyId, session);
-  } else if (session.status === 'error') {
-    showToast('故事生成失败，请重新开始');
-    resetBeginButton();
-  } else {
-    console.log('[waitForStoryReady] still generating, polling again...');
-    // 还在生成中，继续轮询
-    window.setTimeout(() => waitForStoryReady(storyId), 1500);
-  }
-}
-
 // ====================== Intro 页面轮询 ======================
 
 function startIntroPolling(storyId) {
@@ -305,7 +294,8 @@ function startIntroPolling(storyId) {
       setGenerationProgress(freshSession);
       setCountdownHint(buildGenerationHint(freshSession));
       if (isStoryGenerated(freshSession)) {
-        stopIntroPolling();
+        scheduleStoryReady(storyId, freshSession);
+        return;
       }
       if (freshSession.status === 'error') {
         stopIntroPolling();
@@ -324,7 +314,7 @@ function buildGenerationHint(session) {
   }
 
   if (isStoryGenerated(session)) {
-    return '梦境已经铺好，点击开始后进入第一幕。';
+    return '梦境已经铺好，马上进入第一幕。';
   }
 
   const count = session.generated_chunk_count || session.chunks?.length || 0;
@@ -350,8 +340,7 @@ async function generateNext(mode, intervention = '', explicitChoice = null, opti
 
   try {
     hideContinuePanel();
-    hideRewriteModal();
-    showLoading(mode === 'rewrite' ? '正在生成下一节点...' : '正在生成下一节点...');
+    showLoading('正在生成下一节点...');
 
     const payload = {
       current_node_id: currentNode.node_id,
@@ -499,6 +488,7 @@ function handleRoute() {
   }
 
   stopIntroPolling();
+  clearAutoEnterTimer();
   showHomePage();
 }
 
@@ -522,26 +512,7 @@ continueBtn.addEventListener('click', () => {
   generateNext('continue', '');
 });
 
-rewriteBtn.addEventListener('click', () => {
-  hideContinuePanel();
-  interventionInput.value = '';
-  showRewriteModal();
-});
-
 cancelContinueBtn.addEventListener('click', hideContinuePanel);
-
-submitRewriteBtn.addEventListener('click', () => {
-  const intervention = interventionInput.value.trim();
-  if (!intervention) {
-    showToast('请输入改写内容');
-    return;
-  }
-  generateNext('rewrite', intervention);
-});
-
-skipRewriteBtn.addEventListener('click', () => {
-  generateNext('continue', '');
-});
 
 backHomeBtn.addEventListener('click', () => {
   window.location.hash = '#/';
@@ -549,7 +520,6 @@ backHomeBtn.addEventListener('click', () => {
 
 reviewBtn.addEventListener('click', openReviewMode);
 closeReviewBtn.addEventListener('click', hideReviewModal);
-beginBtn.addEventListener('click', handleBeginStory);
 
 setChoiceHandler(handleChoice);
 syncViewportHeight();

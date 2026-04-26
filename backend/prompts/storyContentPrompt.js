@@ -2,51 +2,49 @@
  * 第一层 Prompt：故事内容生成（第一幕）
  * 只生成纯文本片段，不涉及任何渲染相关字段
  *
- * 输入：用户脑洞
- * 输出：title + story_state + state_patch + content（4 个纯文本 fragments）
+ * 输入：Layer 0 的 title + synopsis，用户脑洞仅作兜底约束
+ * 输出：story_state + state_patch + content（4 个纯文本 fragments）
  */
 
 import { buildArchitecturePromptSection } from '../config/storyArchitecture.js';
 
-export function buildStoryContentPrompt(userPrompt) {
+export function buildStoryContentPrompt(input) {
+  const payload = typeof input === 'string' ? { userPrompt: input } : input || {};
+  const title = payload.title || '命运改写局';
+  const synopsis = payload.synopsis || '';
+  const userPrompt = payload.userPrompt || '';
+
   return `你是一个互动短剧策划器。
 
-请根据用户输入的一句话脑洞，生成故事标题、故事状态摘要，以及第一幕互动剧情的纯文本内容。
+请根据 Layer 0 已确定的标题和简介，生成第一幕互动剧情的纯文本片段。
 
-重要：只返回纯 JSON，不要 Markdown，不要解释。
+只返回 JSON，不要 Markdown，不要解释。
 
-用户脑洞：
+标题：
+${title}
+
+简介：
+${synopsis}
+
+原始脑洞：
 ${userPrompt}
 
 ${buildArchitecturePromptSection({ nextChunkIndex: 1 })}
 
 要求：
-1. title 简短有冲突感，不超过 12 个字
-2. story_state 只保存摘要，不要保存完整正文，并必须包含 architecture 字段
-3. characters、facts、open_threads、constraints 每项最多 2 条，避免角色膨胀
-4. content.phase = "opening"
-5. content.fragments 固定生成 4 个片段，使用顺序 ID：片段0、片段1、片段2、片段3
-6. 每个 fragment.text 控制在 55-100 字
-7. 第一幕必须发生在同一个小场景内，第一句就出现可见压力
-8. 片段0 是开场行动选择点（type = "choice_point"），options 包含 2 个具体动作文案
-9. 片段1 是选项A造成的直接后果，片段2 是选项B造成的直接后果，二者都为 type = "scene"
-10. 片段3 是汇聚后的续写锁点（type = "choice_point"），options 包含 1-2 个具体动作文案，用于进入下一幕
-11. choices 动作文案示例：当众揭穿她的谎言、先假装妥协套出真相、要求调监控、拒绝妥协直接反击
-12. 不要生成广告节点
-13. 不要生成 __GENERATE_NEXT__
-14. 不要包含违法、色情、过度血腥、政治敏感内容
-15. story_state.architecture.ending_lane 必须从 truth_reversal、price_escape、role_swap 中选择一个
-16. 后续所有内容都必须服务于 story_state.architecture.ending_promise
-
-第一幕节点 ID 映射规则（供后续转换层使用）：
-- 片段0 → node_0
-- 片段1 → node_1_a
-- 片段2 → node_1_b
-- 片段3 → node_2
+1. 严格承接标题和简介，不要另起故事。
+2. 第一幕锁在同一小场景，第一句就给可见压力。
+3. content.fragments 固定 4 个片段：片段0、片段1、片段2、片段3。
+4. 每个 fragment.text 55-100 字。
+5. 片段0 是开场选择点，options 给 2 个具体动作。
+6. 片段1/2 分别是 A/B 的直接后果。
+7. 片段3 是分支汇合后的更大钩子，options 给 1 个进入下一幕的具体动作。
+8. 不要写广告，不要写 __GENERATE_NEXT__。
+9. story_state 只保存摘要；characters、facts、open_threads、constraints 每项最多 2 条。
+10. story_state.architecture.ending_lane 只能是 truth_reversal、price_escape、role_swap。
 
 返回格式：
 {
-  "title": "故事标题",
   "story_state": {
     "genre": "流派",
     "tone": "基调",
@@ -77,10 +75,10 @@ ${buildArchitecturePromptSection({ nextChunkIndex: 1 })}
   "content": {
     "phase": "opening",
     "fragments": [
-      { "id": "片段0", "text": "开场陷阱和第一选择，55-100字...", "type": "choice_point", "options": ["选项动作A", "选项动作B"] },
-      { "id": "片段1", "text": "选项A的直接后果，55-100字...", "type": "scene", "options": null },
-      { "id": "片段2", "text": "选项B的直接后果，55-100字...", "type": "scene", "options": null },
-      { "id": "片段3", "text": "分支汇聚后的更大钩子，55-100字...", "type": "choice_point", "options": ["带着当前筹码追击下一幕"] }
+      { "id": "片段0", "text": "", "type": "choice_point", "options": ["", ""] },
+      { "id": "片段1", "text": "", "type": "scene", "options": null },
+      { "id": "片段2", "text": "", "type": "scene", "options": null },
+      { "id": "片段3", "text": "", "type": "choice_point", "options": [""] }
     ]
   }
 }`;

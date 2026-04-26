@@ -9,9 +9,9 @@
 export function buildStoryIntroPrompt(userPrompt) {
   return `你是一个互动短剧策划器。
 
-请根据用户输入的一句话脑洞，生成一个故事的标题和简介。
+根据一句话脑洞生成标题和简介。
 
-重要：只返回纯 JSON，不要 Markdown，不要解释。
+只返回 JSON，不要 Markdown，不要解释。
 
 用户脑洞：
 ${userPrompt}
@@ -21,9 +21,8 @@ ${userPrompt}
 2. synopsis 100-150 字，交代故事背景、主角处境、核心冲突
 3. synopsis 不要透露结局，保持悬念
 4. 风格：高冲突、强反转、短平快
-5. synopsis 格式：段落文字，不要分条列举
+5. 锁在一个明确小场景，不铺大世界观，不跳时间线
 6. 不要包含违法、色情、过度血腥、政治敏感内容
-7. synopsis 要把故事锁在一个明确小场景里，不铺大世界观，不跳时间线
 
 返回格式：
 {

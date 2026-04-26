@@ -72,7 +72,11 @@ export async function beginStoryPipeline({ storyId, userPrompt }, options = {}) 
       // ========== Layer 1: 生成纯文本 fragments ==========
       const contentText = await callLLM({
         systemPrompt: '你是一个互动短剧策划器，只返回严格 JSON。',
-        userPrompt: buildStoryContentPrompt(userPrompt),
+        userPrompt: buildStoryContentPrompt({
+          userPrompt,
+          title: session.title,
+          synopsis: session.synopsis
+        }),
         maxTokens: 2048,
         temperature: 1.0
       });
