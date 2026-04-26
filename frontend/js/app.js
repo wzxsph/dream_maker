@@ -34,13 +34,47 @@ import { currentNodeStorageKey, getStoryIdFromHash, unlockedPaywallStorageKey } 
 
 const promptInput = document.getElementById('promptInput');
 const generateBtn = document.getElementById('generateBtn');
-const hotPromptButtons = document.querySelectorAll('.hot-prompt');
 const backHomeBtn = document.getElementById('backHomeBtn');
 const reviewBtn = document.getElementById('reviewBtn');
 const closeReviewBtn = document.getElementById('closeReviewBtn');
 const modeBtns = document.querySelectorAll('.mode-btn');
+const hotPromptsContainer = document.getElementById('hotPrompts');
 
 window.currentNarrativeMode = 'web_novel';
+
+const HOT_PROMPTS = {
+  web_novel: [
+    "过年：我重生回到了过年被亲戚逼婚那一天，这次我带了个假装总裁的男友",
+    "嘴替：我觉醒了「互联网最强嘴替系统」，当面对领导画大饼时我直接开大",
+    "实习生：穿成被全公司欺负的实习生，第一天直接整顿职场",
+    "妆容：我绑定了「无敌神笔妆容」，画个烟熏妆连全员反派都怕我",
+    "宠物：我的金毛觉醒了修仙天赋，天天逼我打坐修炼",
+    "外卖惊喜：点了个外卖，结果收到了未来首富发出的求救信物"
+  ],
+  past_deduction: [
+    "过年：去年的年夜饭上，我因为一点小事和爸爸大吵一架，如果当时我没发火...",
+    "嘴替：会议上明明是我的策划案被抢走，我却没敢当嘴替反驳他，如果可以重来...",
+    "实习生：刚当实习生时，因为粗心把重要数据搞错了导致项目延期，我想回到那天...",
+    "妆容：毕业晚会那天我的妆容全花，成了一直不敢回忆的黑历史，我想重新面对...",
+    "宠物：那天我没注意到小黑（我的宠物狗）的不适，结果它永远离开了我，如果时间能倒流...",
+    "外卖惊喜：好心帮人取了个送错的外卖，却卷入了一场不必要的纠纷，如果当时我..."
+  ]
+};
+
+function renderHotPrompts(mode) {
+  if (!hotPromptsContainer) return;
+  hotPromptsContainer.innerHTML = '';
+  const prompts = HOT_PROMPTS[mode] || HOT_PROMPTS.web_novel;
+  prompts.forEach(text => {
+    const btn = document.createElement('button');
+    btn.className = 'hot-prompt';
+    btn.textContent = text;
+    btn.addEventListener('click', () => {
+      promptInput.value = text;
+    });
+    hotPromptsContainer.appendChild(btn);
+  });
+}
 
 let activePaywallNodeId = null;
 const activeJobs = new Set();
@@ -520,15 +554,9 @@ modeBtns.forEach(btn => {
     } else {
       promptInput.placeholder = '输入你的脑洞，例如：我重生回到了假千金把我推下楼梯那天';
     }
+    renderHotPrompts(window.currentNarrativeMode);
   });
 });
-
-for (const button of hotPromptButtons) {
-  button.addEventListener('click', () => {
-    promptInput.value = button.textContent.trim();
-    promptInput.focus();
-  });
-}
 
 continueBtn.addEventListener('click', () => {
   generateNext('continue', '');
@@ -554,6 +582,7 @@ setRegenerateHandler(() => {
   generateNext('rewrite', '重新推演当前场景（要求：避开原本的剧情发展方向，产生意想不到的全新转折）', null, { keepOnError: true, isRegenerate: true });
 });
 
+renderHotPrompts(window.currentNarrativeMode);
 syncViewportHeight();
 window.addEventListener('resize', syncViewportHeight);
 window.visualViewport?.addEventListener('resize', syncViewportHeight);
