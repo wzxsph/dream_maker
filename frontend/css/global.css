@@ -727,6 +727,102 @@ textarea:focus {
   white-space: nowrap;
 }
 
+.mode-selector {
+  display: flex;
+  margin-top: 14px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.mode-btn {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-weight: 700;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+}
+
+.mode-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--text-main);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.node-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 18px;
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-height: 44px;
+  padding: 0 20px;
+  border-radius: 22px;
+  font-size: 0.9rem;
+}
+
+.custom-choice-group {
+  display: flex;
+  gap: 8px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+  padding-top: 12px;
+}
+
+.custom-choice-input {
+  flex: 1;
+  min-height: 60px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  outline: none;
+  font: inherit;
+  transition: all 0.3s ease;
+}
+
+.custom-choice-input:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.custom-choice-submit {
+  width: 60px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 0.3s;
+}
+
+.custom-choice-submit:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.custom-choice-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .toast {
   position: fixed;
   left: 50%;

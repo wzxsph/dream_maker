@@ -13,6 +13,23 @@ export function buildStoryContentPrompt(input) {
   const title = payload.title || '命运改写局';
   const synopsis = payload.synopsis || '';
   const userPrompt = payload.userPrompt || '';
+  const narrativeMode = payload.narrativeMode || 'web_novel';
+
+  const isPastDeduction = narrativeMode === 'past_deduction';
+  const modeInstruction = isPastDeduction
+    ? `
+过去推演模式要求（写实且克制）：
+1. 风格需极致写实。主角是试图改变某个遗憾瞬间的普通人，禁止出现系统、穿越回特定年代的夸张金手指。
+2. 第一句话马上交代主角当前所处的遗憾场景与现实压力。
+3. 压力源是合理的现实困境（如误解、情感疏忽、工作失误），行动要贴近真实的人际沟通逻辑。
+4. 重视现实互动细节与人物因为选择导致的情感回响。不要使用夸大其词的情节描述。
+`
+    : `
+网文爽文模式要求：
+1. 第一幕必须形成“压力源行动 -> 主角选择 -> 直接后果 -> 发现具体线索”的因果链。
+2. 爽点要明确，展现小胜利逐步累积或抓到漏洞反制。
+3. 避免空泛句式：不要连续使用“下一秒”“空气凝固”等模板化句子。
+`;
 
   return `你是一个互动短剧策划器。
 
@@ -43,15 +60,7 @@ ${buildArchitecturePromptSection({ nextChunkIndex: 1 })}
 9. story_state 只保存摘要；characters、facts、open_threads、constraints 每项最多 2 条。
 10. story_state.architecture.ending_lane 只能是 truth_reversal、price_escape、role_swap。
 
-网文质感与因果要求：
-1. 第一幕必须形成“压力源行动 -> 主角选择 -> 直接后果 -> 发现具体线索”的因果链。
-2. 线索必须来自简介或本场景可见物件，不要凭空出现神秘文件、突然到场的高层、万能监控或陌生证人。
-3. 压力源的行为要有利益、面子、职位、亲情、嫉妒、误会等可理解动机，不要单纯无脑作恶。
-4. 主角要主动且聪明：抓证据、试探话术、保护自己、借力规则，而不是被动等待别人救。
-5. 分支 A/B 只改变手段和代价，片段3 汇合时要承认两个分支都合理地走到同一个锁点。
-6. 爽点要克制但明确：读者能感觉主角拿到一个小优势，而不是靠天降大人物直接翻盘。
-7. 避免空泛句式：不要连续使用“下一秒”“空气凝固”“所有人的人生彻底改变”等模板化句子。
-8. 如果题材是职场/校园/家庭/豪门，流程要贴近常识：请假、查账、监控、报警、继承、处分都需要合理触发条件。
+${modeInstruction}
 
 返回格式：
 {

@@ -1,12 +1,13 @@
 import { STORY_MAX_CHUNKS, buildDefaultArchitectureState } from '../config/storyArchitecture.js';
 
-export function createSession({ storyId, title, synopsis = '', userPrompt = '', storyState = null, firstChunk = null, cards = [], status = 'intro' }) {
+export function createSession({ storyId, title, synopsis = '', userPrompt = '', narrativeMode = 'web_novel', storyState = null, firstChunk = null, cards = [], status = 'intro' }) {
   const now = new Date().toISOString();
   const session = {
     story_id: storyId,
     title,
     synopsis,
     userPrompt,
+    narrative_mode: narrativeMode,
     status,
     generation_status: firstChunk ? 'ready' : 'pending',
     generated_chunk_count: firstChunk ? 1 : 0,

@@ -20,8 +20,9 @@ const els = {
   choices: document.getElementById('choices'),
   endingActions: document.getElementById('endingActions'),
   loadingOverlay: document.getElementById('loadingOverlay'),
-  loadingText: document.getElementById('loadingText'),
   continuePanel: document.getElementById('continuePanel'),
+  nodeActions: document.getElementById('nodeActions'),
+  regenerateNodeBtn: document.getElementById('regenerateNodeBtn'),
   adModal: document.getElementById('adModal'),
   adTitle: document.getElementById('adTitle'),
   adDescription: document.getElementById('adDescription'),
@@ -40,6 +41,10 @@ let storyTextTimer = null;
 
 export function setChoiceHandler(handler) {
   choiceHandler = handler;
+}
+
+export function setRegenerateHandler(handler) {
+  els.regenerateNodeBtn?.addEventListener('click', handler);
 }
 
 export function setStoryTitle(title) {
@@ -128,6 +133,12 @@ function updateEndingActions(node) {
     'hidden',
     node.is_generating || (node.choices || []).length > 0
   );
+  if (els.nodeActions) {
+    els.nodeActions.classList.toggle(
+      'hidden',
+      node.is_generating || (node.choices || []).length === 0
+    );
+  }
 }
 
 function streamStoryText(text, onDone) {
@@ -168,6 +179,38 @@ export function renderChoices(choices, options = {}) {
       }
     });
     els.choices.appendChild(button);
+  }
+
+  if (window.currentNarrativeMode === 'past_deduction' && choices.length > 0 && choices.some(c => c.next_node === '__GENERATE_NEXT__')) {
+    const group = document.createElement('div');
+    group.className = 'custom-choice-group';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'custom-choice-input';
+    input.placeholder = '或者输入你的具体行动/选择...';
+
+    const submit = document.createElement('button');
+    submit.className = 'custom-choice-submit';
+    submit.type = 'button';
+    submit.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
+
+    const handleCustomSubmit = () => {
+      const val = input.value.trim();
+      if (!val) return;
+
+      submit.disabled = true;
+      if (choiceHandler) {
+        choiceHandler({ content: val, next_node: '__GENERATE_NEXT__' });
+      }
+    };
+
+    submit.addEventListener('click', handleCustomSubmit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleCustomSubmit();
+    });
+
+    group.append(input, submit);
+    els.choices.appendChild(group);
   }
 }
 

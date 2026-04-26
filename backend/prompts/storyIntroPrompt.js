@@ -6,7 +6,11 @@
  * 输出：title + synopsis（简介）
  */
 
-export function buildStoryIntroPrompt(userPrompt) {
+export function buildStoryIntroPrompt(userPrompt, narrativeMode = 'web_novel') {
+  const modeInstruction = narrativeMode === 'past_deduction'
+    ? '7. 这属于【过去推演】模式，请设定一个基于现实生活、职场、校园或情感关系中的具体遗憾瞬间。冲突须基于现实逻辑，极其写实和克制，主角是一个带有遗憾的普通人，禁止出现离奇夸张的网文逆袭情节。'
+    : '7. 必须符合常见网文爽点：主角有清晰目标，压力源有合理动机，冲突来自关系/利益/误会/规则，不要靠离谱巧合推动';
+
   return `你是一个互动短剧策划器。
 
 根据一句话脑洞生成标题和简介。
@@ -14,7 +18,7 @@ export function buildStoryIntroPrompt(userPrompt) {
 只返回 JSON，不要 Markdown，不要解释。
 
 用户脑洞：
-${userPrompt}
+\${userPrompt}
 
 要求：
 1. title 简短有冲突感，不超过 12 个字
@@ -23,7 +27,7 @@ ${userPrompt}
 4. 风格：高冲突、强反转、短平快
 5. 锁在一个明确小场景，不铺大世界观，不跳时间线
 6. 不要包含违法、色情、过度血腥、政治敏感内容
-7. 必须符合常见网文爽点：主角有清晰目标，压力源有合理动机，冲突来自关系/利益/误会/规则，不要靠离谱巧合推动
+\${modeInstruction}
 8. 不要把主角写到“惨死当场”“全员无脑羞辱”等过度极端处境，除非用户明确要求；可以写“上一世失去机会/声誉/关系”
 9. 简介里埋 1 个可被第一幕使用的现实线索或物件，例如聊天记录、监控、门禁、合同、票据、录音、车票、病历、群消息
 10. 禁止无铺垫写总监、律师、警察、系统、监控突然解决问题；如果出现，必须作为小场景中已有线索或合理流程的一部分

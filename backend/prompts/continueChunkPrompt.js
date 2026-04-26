@@ -8,7 +8,8 @@ export function buildContinueChunkPrompt({
   choiceContent,
   intervention,
   nextChunkIndex,
-  maxChunks
+  maxChunks,
+  narrativeMode = 'web_novel'
 }) {
   const chunkType = nextChunkIndex >= maxChunks ? 'ending' : 'middle';
   const graphRule = nextChunkIndex === 2
@@ -28,6 +29,17 @@ export function buildContinueChunkPrompt({
     ? `\n用户额外干预：\n${intervention}\n要求：只能作为接下来出现的新变量，不能覆盖已发生事实。\n`
     : '';
 
+  const isPastDeduction = narrativeMode === 'past_deduction';
+  const modeInstruction = isPastDeduction
+    ? `过去推演连贯性要求（写实且克制）：
+1. 必须自然承接玩家刚刚选择所带来的直接后果，注重现实的挫败感与互动。
+2. 避免套路化的网文爽感与过度夸张的逆袭，所有的“成功”必须基于现实。
+3. 压力源动机必须真实，避免降智。保持自然细腻的情感回响。`
+    : `网文质感与爽感要求：
+1. 保持爽感：小胜利逐步累积，反派被自己留下的漏洞反噬，主角获得体面。
+2. 避免模板腔和重复结构：“下一秒”“世界恢复流动”等词不要重复使用。
+3. 如果是职场等生活场景，也需要符合基本常识。`;
+
   return `你是一个互动短剧续写引擎。
 
 只返回 JSON，不要 Markdown，不要解释。
@@ -42,14 +54,11 @@ export function buildContinueChunkPrompt({
 5. chunk_2 不写广告节点，广告由后端插入。
 6. 必须沿着 story_state.architecture.ending_lane 收束。
 
-连贯性与网文质感：
-1. start_node.text 第一小句必须点名上一幕的关键人物/物件/场面，并写出“用户刚才选择”造成的直接结果；不要使用“下一秒，眼前局势变化”这类泛桥接。
-2. 每个新增事实都要能从 story_state.facts、open_threads、最近剧情或当前小场景物件推出；不要凭空增加陌生证人、神秘文件、突然到场的权威人物。
-3. 如果必须引入新工具或角色，只能是此前已经提到或符合当前场景流程的人/物，例如办公室里的同事、群消息、桌面文件、门外脚步、正在响的电话。
-4. 第二幕负责“加深和反转”，不要直接大结局；第三幕负责“用已积累线索完成收束”，不要最后一刻天降关键证据。
-5. 压力源要有自保逻辑，不能突然降智承认一切；主角也不能靠喊口号取胜，必须用证据、规则、心理或关系反制。
-6. 保持常见网文爽感：小胜利逐步累积，反派被自己留下的漏洞反噬，主角获得体面和希望。
-7. 避免模板腔和重复桥接：不要连续使用“下一秒”“空气凝固”“所有人的命运彻底改变”“世界恢复流动”。
+通用连贯性：
+1. start_node.text 第一小句必须点名“用户刚才选择”造成的直接结果。
+2. 新增事件不能凭空跳出陌生人或完全未提及的关键证物。
+
+\${modeInstruction}
 
 ${graphRule}
 

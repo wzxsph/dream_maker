@@ -70,7 +70,7 @@ function mergeInitialStoryState(baseState, generatedState = {}) {
   return next;
 }
 
-export async function initialStoryPipeline({ userPrompt }) {
+export async function initialStoryPipeline({ userPrompt, narrativeMode = 'web_novel' }) {
   const prompt = validateUserPrompt(userPrompt);
   const storyId = generateStoryId();
 
@@ -82,7 +82,7 @@ export async function initialStoryPipeline({ userPrompt }) {
   } else {
     const rawText = await callLLM({
       systemPrompt: '你是一个互动短剧策划器，只返回严格 JSON。',
-      userPrompt: buildStoryIntroPrompt(prompt),
+      userPrompt: buildStoryIntroPrompt(prompt, narrativeMode),
       maxTokens: 512,
       temperature: 0.8
     });
@@ -96,13 +96,14 @@ export async function initialStoryPipeline({ userPrompt }) {
     title: introResult.title,
     synopsis: introResult.synopsis,
     userPrompt: prompt,
+    narrativeMode,
     status: 'intro'
   });
   await saveStorySession(session);
 
   // ========== 后台预生成完整三幕 ==========
   if (hasApiKey()) {
-    startGenerationJob(() => generateFullStory({ storyId, userPrompt: prompt }));
+    startGenerationJob(() => generateFullStory({ storyId, userPrompt: prompt, narrativeMode }));
   } else {
     // mock 模式：直接生成
     const mockState = buildMockInitialState(prompt);
@@ -136,7 +137,7 @@ export async function initialStoryPipeline({ userPrompt }) {
   };
 }
 
-async function generateFullStory({ storyId, userPrompt }) {
+async function generateFullStory({ storyId, userPrompt, narrativeMode = 'web_novel' }) {
   const session = await loadStorySession(storyId);
 
   try {
@@ -147,7 +148,8 @@ async function generateFullStory({ storyId, userPrompt }) {
     const openingResult = await generateOpeningChunkResult({
       userPrompt,
       title: session.title,
-      synopsis: session.synopsis
+      synopsis: session.synopsis,
+      narrativeMode: session.narrative_mode || narrativeMode
     });
 
     // 合并到 session
@@ -193,11 +195,11 @@ async function generateFullStory({ storyId, userPrompt }) {
   }
 }
 
-async function generateOpeningChunkResult({ userPrompt, title, synopsis }) {
+async function generateOpeningChunkResult({ userPrompt, title, synopsis, narrativeMode = 'web_novel' }) {
   const { buildStoryContentPrompt } = await import('../prompts/storyContentPrompt.js');
   const contentText = await callLLM({
     systemPrompt: '你是一个互动短剧策划器，只返回严格 JSON。',
-    userPrompt: buildStoryContentPrompt({ userPrompt, title, synopsis }),
+    userPrompt: buildStoryContentPrompt({ userPrompt, title, synopsis, narrativeMode }),
     maxTokens: 2048,
     temperature: 1.0
   });
@@ -237,6 +239,7 @@ async function generateContinuationChunkResult({
   const chunkText = await callLLM({
     systemPrompt: '你是互动短剧续写引擎，只返回 JSON。',
     userPrompt: buildContinueChunkPrompt({
+      narrativeMode: session.narrative_mode || 'web_novel',
       storyState: session.story_state,
       storyCards: compactStoryCards(session.cards || []),
       continuityContext,

@@ -22,10 +22,11 @@ async function request(path, options = {}) {
   return data;
 }
 
-export function createStory(prompt) {
+export function createStory(payload) {
+  const body = typeof payload === 'string' ? { prompt: payload } : payload;
   return request('/api/stories', {
     method: 'POST',
-    body: JSON.stringify({ prompt })
+    body: JSON.stringify(body)
   });
 }
 

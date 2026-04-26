@@ -39,7 +39,8 @@ app.post(
   '/api/stories',
   asyncRoute(async (req, res) => {
     const result = await initialStoryPipeline({
-      userPrompt: req.body?.prompt
+      userPrompt: req.body?.prompt,
+      narrativeMode: req.body?.narrative_mode
     });
     res.status(201).json(result);
   })

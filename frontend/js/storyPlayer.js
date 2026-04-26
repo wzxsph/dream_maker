@@ -8,7 +8,8 @@ export const state = {
   nodesMap: {},
   currentNodeId: null,
   pendingChoice: null,
-  currentNode: null
+  currentNode: null,
+  lastChoicePayload: null
 };
 
 export function initStory(sessionOrCreateResponse) {
@@ -18,6 +19,15 @@ export function initStory(sessionOrCreateResponse) {
   state.currentNodeId = null;
   state.pendingChoice = null;
   state.currentNode = null;
+  state.lastChoicePayload = null;
+
+  if (sessionOrCreateResponse.player_path?.length) {
+    const last = sessionOrCreateResponse.player_path[sessionOrCreateResponse.player_path.length - 1];
+    state.lastChoicePayload = {
+      current_node_id: last.current_node_id,
+      choice_content: last.choice_content
+    };
+  }
 
   if (Array.isArray(sessionOrCreateResponse.chunks)) {
     for (const chunk of sessionOrCreateResponse.chunks) {

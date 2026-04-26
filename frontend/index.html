@@ -1,119 +1,135 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>造梦</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./css/global.css" />
-    <link rel="stylesheet" href="./css/effects.css" />
-  </head>
-  <body data-theme="dark">
-    <div id="app">
-      <section id="homePage" class="page">
-        <div class="brand-mark" aria-hidden="true">造梦</div>
-        <h1>造梦</h1>
-        <p class="tagline">一句话开局，随时改写命运。</p>
 
-        <textarea
-          id="promptInput"
-          maxlength="200"
-          placeholder="输入你的脑洞，例如：我重生回到了假千金把我推下楼梯那天"
-        ></textarea>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>造梦</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./css/global.css" />
+  <link rel="stylesheet" href="./css/effects.css" />
+</head>
 
-        <button id="generateBtn" class="primary-btn">生成我的互动短剧</button>
+<body data-theme="dark">
+  <div id="app">
+    <section id="homePage" class="page">
+      <div class="brand-mark" aria-hidden="true">造梦</div>
+      <h1>造梦</h1>
+      <p class="tagline">一句话开局，随时改写命运。</p>
 
-        <div id="hotPrompts" aria-label="热门脑洞">
-          <button class="hot-prompt">我重生回到了假千金把我推下楼梯那天</button>
-          <button class="hot-prompt">我觉醒了能听见心声的系统</button>
-          <button class="hot-prompt">午夜宿舍门外有人敲门</button>
-          <button class="hot-prompt">我穿成了反派的白月光</button>
-        </div>
-      </section>
+      <div class="mode-selector" id="modeSelector">
+        <button type="button" class="mode-btn active" data-mode="web_novel">网络爽文</button>
+        <button type="button" class="mode-btn" data-mode="past_deduction">过去推演</button>
+      </div>
 
-      <section id="introPage" class="page hidden">
-        <div id="introShell">
-          <div id="introBadge">故事即将开始</div>
-          <h1 id="introTitle"></h1>
-          <div id="introSynopsis"></div>
-          <div id="generationProgress" aria-label="生成进度">
-            <div id="progressTrack">
-              <div id="progressFill"></div>
+      <textarea id="promptInput" maxlength="200" placeholder="输入你的脑洞，例如：我重生回到了假千金把我推下楼梯那天"></textarea>
+
+      <button id="generateBtn" class="primary-btn">生成我的互动短剧</button>
+
+      <div id="hotPrompts" aria-label="热门脑洞">
+        <button class="hot-prompt">我重生回到了假千金把我推下楼梯那天</button>
+        <button class="hot-prompt">我觉醒了能听见心声的系统</button>
+        <button class="hot-prompt">午夜宿舍门外有人敲门</button>
+        <button class="hot-prompt">我穿成了反派的白月光</button>
+      </div>
+    </section>
+
+    <section id="introPage" class="page hidden">
+      <div id="introShell">
+        <div id="introBadge">故事即将开始</div>
+        <h1 id="introTitle"></h1>
+        <div id="introSynopsis"></div>
+        <div id="generationProgress" aria-label="生成进度">
+          <div id="progressTrack">
+            <div id="progressFill"></div>
+          </div>
+          <div id="progressSteps">
+            <div class="progress-step" data-step="0">
+              <span>S1</span>
+              <b>标题简介</b>
             </div>
-            <div id="progressSteps">
-              <div class="progress-step" data-step="0">
-                <span>S1</span>
-                <b>标题简介</b>
-              </div>
-              <div class="progress-step" data-step="1">
-                <span>S2</span>
-                <b>第一幕</b>
-              </div>
-              <div class="progress-step" data-step="2">
-                <span>S3</span>
-                <b>第二幕</b>
-              </div>
-              <div class="progress-step" data-step="3">
-                <span>S4</span>
-                <b>收束结尾</b>
-              </div>
+            <div class="progress-step" data-step="1">
+              <span>S2</span>
+              <b>第一幕</b>
+            </div>
+            <div class="progress-step" data-step="2">
+              <span>S3</span>
+              <b>第二幕</b>
+            </div>
+            <div class="progress-step" data-step="3">
+              <span>S4</span>
+              <b>收束结尾</b>
             </div>
           </div>
-          <p id="countdownHint" class="countdown-hint">生成中，请稍候...</p>
         </div>
-      </section>
+        <p id="countdownHint" class="countdown-hint">生成中，请稍候...</p>
+      </div>
+    </section>
 
-      <section id="storyPage" class="page hidden">
-        <div id="storyShell">
-          <div id="storyTitle"></div>
-          <div id="storyText"></div>
-          <div id="choices"></div>
-          <div id="endingActions" class="hidden">
-            <p>故事结束</p>
-            <button id="reviewBtn" class="primary-btn">复盘全图</button>
-            <button id="backHomeBtn" class="secondary-btn">重新造梦</button>
-          </div>
+    <section id="storyPage" class="page hidden">
+      <div id="storyShell">
+        <div id="storyTitle"></div>
+        <div id="storyText"></div>
+        <div id="choices"></div>
+        <div id="nodeActions" class="node-actions hidden">
+          <button id="regenerateNodeBtn" class="ghost-btn icon-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 2v6h-6"></path>
+              <path d="M21 13a9 9 0 1 1-3-7.7L21 8"></path>
+            </svg>
+            对推演不满意？重新生成
+          </button>
         </div>
-      </section>
-
-      <div id="loadingOverlay" class="overlay hidden">
-        <div class="loading-card">
-          <div class="loading-spinner"></div>
-          <p id="loadingText">正在构建梦境世界...</p>
+        <div id="endingActions" class="hidden">
+          <p>故事结束</p>
+          <button id="reviewBtn" class="primary-btn">复盘全图</button>
+          <button id="backHomeBtn" class="secondary-btn">重新造梦</button>
         </div>
       </div>
+    </section>
 
-      <div id="continuePanel" class="overlay hidden">
-        <div class="modal-card">
-          <h2>下一幕即将展开</h2>
-          <p>当前选择会带你进入已经生成好的下一幕。</p>
-          <button id="continueBtn" class="primary-btn">继续当前剧情</button>
-          <button id="cancelContinueBtn" class="ghost-btn">取消</button>
-        </div>
+    <div id="loadingOverlay" class="overlay hidden">
+      <div class="loading-card">
+        <div class="loading-spinner"></div>
+        <p id="loadingText">正在构建梦境世界...</p>
       </div>
-
-      <div id="adModal" class="overlay hidden">
-        <div class="modal-card ad-card">
-          <h2 id="adTitle">观看广告，解锁剧情</h2>
-          <p id="adDescription">世界意志正在干扰你的命运。</p>
-          <p id="adCountdown">5</p>
-          <button id="adUnlockBtn" class="primary-btn" disabled>解锁剧情</button>
-        </div>
-      </div>
-
-      <div id="reviewModal" class="overlay hidden">
-        <div class="modal-card review-card">
-          <h2>复盘全图</h2>
-          <div id="reviewNodeList"></div>
-          <button id="closeReviewBtn" class="secondary-btn">返回剧情</button>
-        </div>
-      </div>
-
-      <div id="toast" class="toast hidden"></div>
     </div>
 
-    <script type="module" src="./js/app.js"></script>
-  </body>
+    <div id="continuePanel" class="overlay hidden">
+      <div class="modal-card">
+        <h2>下一幕即将展开</h2>
+        <p>当前选择会带你进入已经生成好的下一幕。</p>
+        <button id="continueBtn" class="primary-btn">继续当前剧情</button>
+        <button id="cancelContinueBtn" class="ghost-btn">取消</button>
+      </div>
+    </div>
+
+    <div id="adModal" class="overlay hidden">
+      <div class="modal-card ad-card">
+        <h2 id="adTitle">观看广告，解锁剧情</h2>
+        <p id="adDescription">世界意志正在干扰你的命运。</p>
+        <p id="adCountdown">5</p>
+        <button id="adUnlockBtn" class="primary-btn" disabled>解锁剧情</button>
+      </div>
+    </div>
+
+    <div id="reviewModal" class="overlay hidden">
+      <div class="modal-card review-card">
+        <h2>复盘全图</h2>
+        <div id="reviewNodeList"></div>
+        <button id="closeReviewBtn" class="secondary-btn">返回剧情</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+
 </html>

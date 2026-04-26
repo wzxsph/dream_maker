@@ -14,8 +14,8 @@ import {
   hideContinuePanel,
   hideLoading,
   renderNode,
-  setChoiceHandler,
   setGenerationProgress,
+  setRegenerateHandler,
   setStoryTitle,
   showContinuePanel,
   showHomePage,
@@ -35,11 +35,13 @@ import { currentNodeStorageKey, getStoryIdFromHash, unlockedPaywallStorageKey } 
 const promptInput = document.getElementById('promptInput');
 const generateBtn = document.getElementById('generateBtn');
 const hotPromptButtons = document.querySelectorAll('.hot-prompt');
-const continueBtn = document.getElementById('continueBtn');
-const cancelContinueBtn = document.getElementById('cancelContinueBtn');
 const backHomeBtn = document.getElementById('backHomeBtn');
 const reviewBtn = document.getElementById('reviewBtn');
 const closeReviewBtn = document.getElementById('closeReviewBtn');
+const modeBtns = document.querySelectorAll('.mode-btn');
+
+window.currentNarrativeMode = 'web_novel';
+
 let activePaywallNodeId = null;
 const activeJobs = new Set();
 let storyStatusPollTimer = null;
@@ -154,7 +156,7 @@ async function handleCreateStory() {
     setCountdownHint(buildGenerationHint({ intro_ready: false }));
     showIntroProgress({ resetTimer: true });
 
-    const result = await createStory(prompt);
+    const result = await createStory({ prompt, narrative_mode: window.currentNarrativeMode });
     console.log('[handleCreateStory] got result:', result.story_id, result.title);
 
     // 跳转到 intro 页面，显示标题+简介
@@ -333,7 +335,7 @@ async function generateNext(mode, intervention = '', explicitChoice = null, opti
   const currentNode = getCurrentNode();
   const pendingChoice = explicitChoice || getPendingChoice();
 
-  if (!currentNode || !pendingChoice) {
+  if (!options.isRegenerate && (!currentNode || !pendingChoice)) {
     showToast('剧情状态异常，请重新进入故事');
     return;
   }
@@ -343,11 +345,18 @@ async function generateNext(mode, intervention = '', explicitChoice = null, opti
     showLoading('正在生成下一节点...');
 
     const payload = {
-      current_node_id: currentNode.node_id,
-      choice_content: pendingChoice.content,
+      current_node_id: options.isRegenerate ? state.lastChoicePayload.current_node_id : currentNode.node_id,
+      choice_content: options.isRegenerate ? state.lastChoicePayload.choice_content : pendingChoice.content,
       mode,
       intervention
     };
+
+    if (mode === 'continue') {
+      state.lastChoicePayload = {
+        current_node_id: payload.current_node_id,
+        choice_content: payload.choice_content
+      };
+    }
 
     const progressive = await continueStoryProgressive(state.storyId, payload);
 
@@ -492,13 +501,26 @@ function handleRoute() {
   showHomePage();
 }
 
-// ====================== 事件绑定 ======================
-
 generateBtn.addEventListener('click', handleCreateStory);
 promptInput.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
     handleCreateStory();
   }
+});
+
+modeBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.classList.contains('active')) return;
+    modeBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    window.currentNarrativeMode = btn.dataset.mode;
+
+    if (window.currentNarrativeMode === 'past_deduction') {
+      promptInput.placeholder = '讲述一段你迫切想要改变的过去瞬间，例如：那年夏天我们在十字路口争吵，我说了伤害她的话，如果当时我...';
+    } else {
+      promptInput.placeholder = '输入你的脑洞，例如：我重生回到了假千金把我推下楼梯那天';
+    }
+  });
 });
 
 for (const button of hotPromptButtons) {
@@ -521,7 +543,17 @@ backHomeBtn.addEventListener('click', () => {
 reviewBtn.addEventListener('click', openReviewMode);
 closeReviewBtn.addEventListener('click', hideReviewModal);
 
+import { setChoiceHandler } from './ui.js';
 setChoiceHandler(handleChoice);
+
+setRegenerateHandler(() => {
+  if (!state.lastChoicePayload) {
+    showToast('当前场景无法重新生成（缺少历史上下文），请刷新页面后通过记录重试');
+    return;
+  }
+  generateNext('rewrite', '重新推演当前场景（要求：避开原本的剧情发展方向，产生意想不到的全新转折）', null, { keepOnError: true, isRegenerate: true });
+});
+
 syncViewportHeight();
 window.addEventListener('resize', syncViewportHeight);
 window.visualViewport?.addEventListener('resize', syncViewportHeight);
