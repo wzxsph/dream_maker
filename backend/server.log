@@ -48,3 +48,245 @@ Error: AI 返回不是有效 JSON
     "characters_update": []
   },
   "node
+[callAnthropicMessages] raw data: {"id":"063cdb03f7d3e6a4c90a63b447e45069","type":"message","role":"assistant","model":"MiniMax-M2.7","content":[{"thinking":"用户要求我根据一个脑洞生成互动短剧的标题和简介。让我分析一下需求：\n\n脑洞内容：实习生穿成被全公司欺负的实习生，第一天直接整顿职场\n\n要求：\n1. title 不超过12个字，短小有冲突感\n2. synopsis 100-150字，交代背景、处境、核心冲突\n3. 不要透露结局\n4. 风格：高冲突、强反转、短平快\n5. 锁定在小场景，不铺大世界观\n6. 内容合规\n7. 符合网文爽点：主角有清晰目标，压力源有合理动机，冲突来自关系/利益/误会/规则\n8. 不要过度极端\n9. 埋一个可被第一幕使用的现实线索或物件\n10. 不要无铺垫解决问题\n11. JSON字符串值内不要用英文双引号\n\n让我构思：\n\ntitle：需要简短有冲突感，不超过12字\n- \"职场新人不服输\" - 6字\n- \"新人的第一把火\"
+[callAnthropicMessages] extracted text length: 222, preview: {
+  "title": "整顿职场第一天",
+  "synopsis": "职场小透明林晓第一天入职，发现自己被分配到堆积如山的文件和一个根本完不成的项目。主管当众羞辱她，同事把黑锅甩给她，连门禁卡都刷不进茶水间。被逼到墙角时，她意外发现自己竟然带着“职场读心术”，能看穿每个人背后的利益动机。当晚加班时，她用一份精心准备的会议纪要，让主管的方案漏洞百出。可第二天等待她的，是更猛烈的报复——一份写
+[callAnthropicMessages] raw data: {"id":"063cdb17237b1dd7c9fc2379f508a003","type":"message","role":"assistant","model":"MiniMax-M2.7","content":[{"thinking":"用户需要我生成一个互动短剧的JSON格式内容。让我仔细分析要求：\n\n1. 标题：整顿职场第一天\n2. 简介：职场小透明林晓第一天入职的遭遇\n3. 当前幕蓝图：chunk_id = \"chunk_1\"，chunk_index = 1，type = \"opening\"\n4. nodes：node_0、node_1_a、node_1_b、node_2\n5. 戏剧任务：开场陷阱，把主角锁进小场景，给出第一处危险和第一组行动选择\n\n要求：\n- 4个片段：片段0（开场选择点，2个选项）、片段1（A后果）、片段2（B后果）、片段3（分支汇合后的钩子，1个选项）\n- 每个片段55-100字\n- 必须承接标题和简介\n- 锁在同一小场景\n- 第一句给可见压力\n- 不要用模板化句子\n- story_state只保存摘要\n- 
+[callAnthropicMessages] extracted text length: 2560, preview: ```json
+{
+  "story_state": {
+    "genre": "都市职场复仇",
+    "tone": "压抑后爆发",
+    "current_phase": "opening",
+    "protagonist": {
+      "name": "林晓",
+      "identity": "入职第一天的新人",
+      "goal": "在职场站稳脚跟，不
+[generateFullStory] opening layer raw text: ```json
+{
+  "story_state": {
+    "genre": "都市职场复仇",
+    "tone": "压抑后爆发",
+    "current_phase": "opening",
+    "protagonist": {
+      "name": "林晓",
+      "identity": "入职第一天的新人",
+      "goal": "在职场站稳脚跟，不被欺负"
+    },
+    "characters": [
+      {
+        "name": "主管赵明",
+        "identity": "部门主管",
+        "status": "当众羞辱林晓",
+        "role": "压力源"
+      },
+      {
+        "name": "同事小周",
+        "identity": "部门老员工",
+        "status": "把黑锅推给林晓",
+        "role": "压力源/潜在盟友"
+      }
+    ],
+    "facts": [
+      "林晓被分配堆积如山的文件和一个不可能完成的项目",
+      "主管当众羞辱，同事甩锅，门禁卡失效"
+    ],
+    "open_threads": [
+      "项目方案上的数据明显有问题",
+      "茶水间门禁卡为什么刷不进去"
+    ],
+    "constraints": [
+      "第一天就被针对，没有积累任何职场筹码",
+      "面对老员工的排挤，没有现成的盟友"
+    ],
+    "architecture": {
+      "id": "micro_scene_locked_3_act",
+      "name": "微场景锁结局三幕架构",
+      "scene_lock": "工位区域",
+      "time_lock": "入职第一天的上午",
+      "cast_limit": "3个有姓名角色：林晓、主管赵明、同事小周",
+      "choice_contract": "玩家选择改变手段、代价、谁先暴露，不改变故事必须收束的结局走向",
+      "quality_contract": "每个新事实都要由已出现的动作、物件、动机或伏笔推出",
+      "ending_lane": "truth_reversal",
+      "ending_promise": "林晓用职场读心术看穿所有人利益动机，最终用铁证扳倒主管"
+    }
+  },
+  "state_patch": {
+    "current_phase": "opening_conflict",
+    "facts_add": ["发现项目方案数据异常，有两处明显矛盾"],
+    "open_threads_add": ["茶水间门禁卡失效的原因", "项目方案的真实负责人是谁"],
+    "open_threads_resolved": [],
+    "characters_update": [
+      {"name": "主管赵明", "update": "当众羞辱后离开，留下堆积文件"},
+      {"name": "同事小周", "update": "暗示林晓别多问，眼神闪烁"}
+    ]
+  },
+  "content": {
+    "phase": "opening",
+    "fragments": [
+      {
+        "id": "片段0",
+        "text": "办公区里安静得只剩键盘声，主管赵明把一摞文件摔在她桌上：“这些今天下班前整理完，别让我失望。”说完转身就走。林晓翻了两页，发现根本不是她该负责的项目——上面盖着红章“机密-管理层”。她感觉全组的目光都落在自己身上。",
+        "type": "choice_point",
+        "options": [
+          "低头继续整理，忍下这口气先熟悉环境",
+          "拿着文件追出去，礼貌地询问这是否属于自己的工作范围"
+        ]
+      },
+      {
+        "id": "片段1",
+        "text": "林晓埋头翻页，突然发现夹在最后一份文件里的项目方案——日期是三周前，审批栏有主管的签字，但在“最终审核”处赫然印着HR总监的名字。更离谱的是，预算数字是八十万，划掉后手写改成了一百二十万。她正想细看，同事小周凑过来：“别看了，那东西谁碰谁倒霉。”目光却飘向主管办公室的方向。",
+        "type": "scene",
+        "options": null
+      },
+      {
+        "id": "片段2",
+        "text": "林晓拿着文件走到主管门口，赵明正好挂断电话，回头冷冷看她：“有事？”她刚开口说文件不对劲，赵明直接打断：“让你整理个文件还要解释？你以为你是谁。”声音大到周围工位都能听见，有人开始窃窃私语。小周站在茶水间门口，欲言又止地看了她一眼。",
+        "type": "scene",
+        "options": null
+      },
+      {
+        "id": "片段3",
+        "text": "被当众训斥后，林晓只好回到工位。午休时她去茶水间接水，门禁卡刷了三次都亮红灯——权限不足。透过玻璃窗，她看到主管赵明正和HR总监笑着走出来。同一张门禁卡，她却进不去。就在她掏出手机想拍下这一幕时，屏幕突然弹出一条未读消息：发送者未知，内容只有四个字——“小心小周”。",
+        "type": "choice_point",
+        "options": ["找到小周当面问清楚这条消息的来源"]
+      }
+    ]
+  }
+}
+```
+[callAnthropicMessages] raw data: {"id":"063cdb5488c32c72b9271bb1a058d887","type":"message","role":"assistant","model":"MiniMax-M2.7","content":[{"thinking":"用户选择\"找到小周当面问清楚这条消息的来源\"。我需要生成chunk_2的4个节点（node_5, node_6_a, node_6_b, node_7），自然承接上一幕。\n\n当前情境：\n- 林晓收到神秘消息\"小心小周\"\n- 她决定去找小周问清楚\n- node_5应该是她的行动结果，发现小周的问题\n- node_6_a和node_6_b是不同选择导致的分支，但最终汇合到node_7\n\n我需要写出：\n1. node_5：找到小周，当面质问，发现小周有问题\n2. node_6_a：选择某种行动A\n3. node_6_b：选择另一种行动B\n4. node_7：两个分支汇合，揭示更大危机\n\n按照要求：\n- 50-110字每个节点\n- 每个节点有压力或信息差\n- choices最多2个，文案是具体动作\n- 不写
+[callAnthropicMessages] extracted text length: 1196, preview: {"state_patch":{"current_phase":"mid_revelation","facts_add":["小周与主管赵明之间存在利益关联，门禁卡权限被主管取消"],"open_threads_add":["谁在暗中帮林晓？","小周手里有什么把柄？"],"open_threads_resolved":["茶水间门禁卡失效是主管所为"],"characters_update":[
+[callAnthropicMessages] raw data: {"id":"063cdb7bd59233c3545957e93740e841","type":"message","role":"assistant","model":"MiniMax-M2.7","content":[{"thinking":"让我分析一下当前情况：\n\n1. 当前节点是 node_7，描述了林晓发现方案数据矛盾指向公司内部有人在套取资金\n2. 用户选择了\"抓住对方露出的破绽继续追证\"\n3. 现在需要生成 node_8，这是 chunk_3 的 start_node\n\n根据架构要求：\n- chunk_3 是 ending 阶段\n- node_8 -> node_9_a / node_9_b\n- node_9_a -> node_10_ending\n- node_9_b -> node_10_ending\n- node_10_ending 是 end_node，choices = []\n- ending_lane 是 truth_reversal\n\n关键要素：\n- 真相已经揭露：有人在套取公司资金\n- 主管赵明和HR总监早就知道\n-
+[callAnthropicMessages] extracted text length: 2130, preview: ```json
+{
+  "state_patch": {
+    "current_phase": "climax",
+    "facts_add": [
+      "赵明承认数据矛盾是套取资金的手段",
+      "小周是被主管胁迫的替罪羊，门禁卡权限由赵明亲自取消"
+    ],
+    "open_threads_add": [
+      "赵明试图用权力压制林晓"
+    ],
+ 
+[generateFullStory] story story_QOD-0PGOgq prebuilt chunks: chunk_1, chunk_2, chunk_3
+[callAnthropicMessages] raw data: {"id":"063cdf1845ab002cc62723445648516c","type":"message","role":"assistant","model":"MiniMax-M2.7","content":[{"thinking":"让我分析当前情况：\n\n1. 当前节点是 node_7，文本描述林晓发现方案数据矛盾是套取公司资金的手段，真正的幕后黑手（主管赵明）正慢慢转过椅子\n2. 玩家选择了\"抓住对方露出的破绽继续追证\"\n3. 需要生成 node_8，作为 chunk_3 (ending) 的 start_node\n\n根据要求：\n- node_id 必须是 \"node_8\"\n- text 要直接承接 current_node_text 和 selected_choice\n- text 50-90字，写自然剧情，不写\"你刚选择了\"\n- bg_theme 只能是 light/dark/danger/victory\n- choices 必须是空数组\n- 遵守场景锁和 ending_lane (truth_reversal)\n- 不使用泛桥
+[callAnthropicMessages] extracted text length: 233, preview: ```json
+{
+  "node": {
+    "node_id": "node_8",
+    "text": "林晓追证的气势让赵明的脸色骤变。他压低声音：“你以为抓住点数据就能翻盘？”手指下意识敲击桌面——一个被戳中要害时的微表情。林晓注意到他挡在办公桌前，右手已经摸向抽屉把手。那里似乎藏着什么东西。",
+    "bg_theme": "danger",
+    "ui_effect"
+[callAnthropicMessages] raw data: {"id":"063cdf2df37afb1395ccbdb512d2339d","type":"message","role":"assistant","model":"MiniMax-M2.7","content":[{"thinking":"用户需要我根据一个网文脑洞生成标题和简介。这是一个关于\"重生+假扮总裁男友应对逼婚\"的设定。\n\n让我分析一下要求：\n1. title: 简短有冲突感，不超过12个字\n2. synopsis: 100-150字，交代背景、处境、核心冲突，不透露结局\n3. 风格：高冲突、强反转、短平快\n4. 锁在明确小场景（过年家庭聚会）\n5. 符合网文爽点：主角有清晰目标，压力源有合理动机，冲突来自关系/利益/误会/规则\n6. 埋1个可被第一幕使用的现实线索或物件\n\n让我构思：\n\n**标题方向**：\n- 重生之我在过年带假总裁回家\n- 重生回逼婚那天，这次我带了个假总裁\n- 过年逼婚：我带了个假总裁回家\n- 重生归来，假总裁应对逼婚\n- 逼婚现场：我带的假总裁翻车了\n\n我觉得\"假总裁翻车\"有点剧透结局，\"重生成假
+[callAnthropicMessages] extracted text length: 165, preview: {
+  "title": "逼婚现场：我带的假总裁",
+  "synopsis": "重生回过年被逼婚那天。上一世我在亲戚轮番围攻下丢尽颜面，这次我带了个\"假总裁\"男友回来。本以为能优雅反杀，结果酒过三巡，他手机响了——\"什么？公司出了点问题？\"满桌亲戚眼神瞬间变了。我手心冒汗，包里那份聊天记录成了唯一的底牌..."
+}
+[callAnthropicMessages] raw data: {"id":"063cdf2e70d08a30941630716c0f091d","type":"message","role":"assistant","model":"MiniMax-M2.7","content":[{"thinking":"让我仔细分析当前情况：\n\n1. 当前场景：林晓发现项目方案上的数据矛盾是套取公司资金的证据，赵明是幕后黑手，小周是替罪羊\n2. 用户选择：抓住对方露出的破绽继续追证\n3. 用户干预：要求重新推演，避开原本的剧情发展方向，产生意想不到的全新转折\n\n根据要求：\n- chunk_3 是 ending 类型，固定图结构：node_8 -> node_9_a/node_9_b -> node_10_ending\n- ending_lane = \"truth_reversal\"，承诺是\"林晓用职场读心术看穿所有人利益动机，最终用铁证扳倒主管\"\n- 场景锁：工位区域，时间锁：入职第一天的上午\n- 必须自然承接，不能跳地点、时间、视角\n\n现在的剧情状态：\n- 赵明承认了数据矛盾是套取资金的手段\n- 小周被证实是被胁迫的替罪
+[callAnthropicMessages] extracted text length: 2243, preview: ```json
+{
+  "state_patch": {
+    "current_phase": "resolution",
+    "facts_add": [
+      "茶水间监控记录了赵明删除数据的操作，备份存于林晓的工牌芯片中",
+      "小周手里握着赵明三年前伪造供应商合同的把柄",
+      "赵明被铁证封死后选择了自保式坦白"
+    ],
+    "open_thre
+[callAnthropicMessages] raw data: {"id":"063cdf4b61b6d1fe836fea9cc4fd43ee","type":"message","role":"assistant","model":"MiniMax-M2.7","content":[{"thinking":"让我仔细分析这个任务：\n\n1. 我是一个互动短剧策划器，需要生成第一幕互动剧情的纯文本片段\n2. 只返回JSON，不要Markdown，不要解释\n3. 标题：逼婚现场：我带的假总裁\n4. 简介：重生回过年被逼婚那天。上一世我在亲戚轮番围攻下丢尽颜面，这次我带了个\"假总裁\"男友回来。本以为能优雅反杀，结果酒过三巡，他手机响了——\"什么？公司出了点问题？\"满桌亲戚眼神瞬间变了。我手心冒汗，包里那份聊天记录成了唯一的底牌...\n\n这是第一幕（opening），需要：\n- chunk_id = \"chunk_1\"，chunk_index = 1\n- start_node = \"node_0\"，end_nodes = [\"node_2\"]\n- nodes 只能使用：node_0、node_1_a、node_1_b
+[callAnthropicMessages] extracted text length: 2190, preview: {
+  "story_state": {
+    "genre": "都市重生爽文",
+    "tone": "轻松复仇+甜蜜互动",
+    "current_phase": "opening",
+    "protagonist": {
+      "name": "女主",
+      "identity": "重生女，带假总裁男友回家过年",
+      "goal": "优雅反杀逼婚亲
+[generateFullStory] opening layer raw text: {
+  "story_state": {
+    "genre": "都市重生爽文",
+    "tone": "轻松复仇+甜蜜互动",
+    "current_phase": "opening",
+    "protagonist": {
+      "name": "女主",
+      "identity": "重生女，带假总裁男友回家过年",
+      "goal": "优雅反杀逼婚亲戚，守护自尊"
+    },
+    "characters": [
+      "三姨：逼婚急先锋，话里带刺，专挑软肋问",
+      "假总裁：高价租来的型男演员，演技尚可但经验不足"
+    ],
+    "facts": [
+      "假总裁手机里存着伪造的商业精英人设相册",
+      "女主包里有一份与假总裁预先约定的暗号聊天记录"
+    ],
+    "open_threads": [
+      "假总裁能否撑过亲戚的连环盘问？",
+      "女主的聊天记录底牌何时亮出？"
+    ],
+    "constraints": [
+      "不能在饭桌上直接翻脸，必须维持表面和平",
+      "假总裁的真实身份不能当场暴露"
+    ],
+    "architecture": {
+      "id": "micro_scene_locked_3_act",
+      "name": "微场景锁结局三幕架构",
+      "scene_lock": "过年家宴饭桌及相邻客厅",
+      "time_lock": "晚餐前30分钟",
+      "cast_limit": "女主、假总裁、三姨、六叔、表妹共5人",
+      "choice_contract": "玩家选择改变手段、代价、谁先暴露，不改变结局走向",
+      "quality_contract": "每个新事实都要由已出现的动作、物件、动机或伏笔推出",
+      "ending_lane": "truth_reversal",
+      "ending_promise": "女主用聊天记录证明假总裁是租来的，引发亲戚间信任崩塌"
+    }
+  },
+  "state_patch": {
+    "current_phase": "opening_conflict",
+    "facts_add": [
+      "三姨先夸假总裁外表，再暗示女主眼光不行"
+    ],
+    "open_threads_add": [
+      "假总裁酒杯端反了，被六叔看出破绽"
+    ],
+    "open_threads_resolved": [],
+    "characters_update": []
+  },
+  "content": {
+    "phase": "opening",
+    "fragments": [
+      {
+        "id": "片段0",
+        "text": "饭桌上热气腾腾，三姨夹了块红烧肉，突然笑眯眯转向假总裁：'小李是吧？听说你开公司，今年赚了多少钱呀？'假总裁愣了一秒，余光瞟向你。满桌十几双眼睛齐刷刷看过来，空气仿佛凝固了。",
+        "type": "choice_point",
+        "options": [
+          "抢先接过话头，夸假总裁商业眼光独到",
+          "借口帮假总裁倒酒，趁机踢他一脚提醒"
+        ]
+      },
+      {
+        "id": "片段1",
+        "text": "你笑着举起酒杯：'三姨，小李刚投了个新能源项目，回报周期长，但前景特别好！'假总裁立刻会意，顺势叹气说资金确实还在回笼。三姨眼珠一转，换了个更刁钻的角度：'那房子买在哪儿呀？市中心还是郊区？'",
+        "type": "scene",
+        "options": null
+      },
+      {
+        "id": "片段2",
+        "text": "你起身给他倒酒，膝盖故意碰了碰他小腿。假总裁清了清嗓子，端起酒杯说：'事业还在上升期，暂时租房，想给女朋友一个安稳的家再买。'这话说得得体，六叔却放下筷子，眼神意味深长地盯着假总裁端酒杯的手势。",
+        "type": "scene",
+        "options": null
+      },
+      {
+        "id": "片段3",
+        "text": "六叔突然开口：'小李，你这端酒杯的姿势，怎么跟上次电视里那个被骗的假老板一模一样？'满桌哄笑，但你注意到六叔眼神锐利，假总裁手指微微发颤。你下意识摸向包里那份聊天记录——那是你们约定的最后底牌。",
+        "type": "choice_point",
+        "options": [
+          "主动把聊天记录亮出来，证明假总裁'早有准备'增加可信度"
+        ]
+      }
+    ]
+  }
+}
