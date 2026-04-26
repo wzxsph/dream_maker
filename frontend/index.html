@@ -95,9 +95,30 @@
             </svg>
             退出推演
           </button>
+          <button id="historyTreeBtn" class="ghost-btn icon-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="5" r="3"></circle>
+              <line x1="12" y1="8" x2="12" y2="14"></line>
+              <line x1="12" y1="14" x2="6" y2="20"></line>
+              <line x1="12" y1="14" x2="18" y2="20"></line>
+              <circle cx="6" cy="20" r="2"></circle>
+              <circle cx="18" cy="20" r="2"></circle>
+            </svg>
+            历史记录
+          </button>
         </div>
       </div>
     </section>
+
+    <!-- 历史记录树形面板 -->
+    <div id="historyPanel" class="history-panel hidden">
+      <div class="history-panel-header">
+        <h3>推演历史</h3>
+        <button id="closeHistoryBtn" class="ghost-btn" type="button">&times;</button>
+      </div>
+      <div id="historyTreeContainer" class="history-tree-container"></div>
+    </div>
 
     <div id="loadingOverlay" class="overlay hidden">
       <div class="loading-card">

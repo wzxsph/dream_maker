@@ -81,9 +81,13 @@ async function callAnthropicCompatible({ systemPrompt, userPrompt, maxTokens, te
   const baseUrl = process.env.AI_BASE_URL || 'https://api.minimaxi.com/anthropic';
   const model = process.env.AI_MODEL || 'MiniMax-M2.7';
   let maxTokensVal = Number(maxTokens || process.env.AI_MAX_TOKENS || 2048);
-  // 对于支持 thinking 的大模型，生成的思考过程消耗极多 token
-  // 必须确保 maxTokens 很大，否则返回被截断。最高到 8192 或更高。
-  maxTokensVal = Math.max(maxTokensVal, 8192);
+  // 对于支持 thinking 的大模型，thinking 消耗额外 token。
+  // 但不要无条件拉到 8192，否则小请求（如单节点推演 1024）也会变慢。
+  // 策略：如果调用方请求 <= 2048，适当翻倍到 4096 以留出 thinking 空间；
+  // 如果调用方请求 > 2048，则信任调用方传入的值。
+  if (maxTokensVal <= 2048) {
+    maxTokensVal = 4096;
+  }
   const payload = {
     model,
     system: systemPrompt,

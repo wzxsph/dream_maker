@@ -31,6 +31,9 @@ const els = {
   adUnlockBtn: document.getElementById('adUnlockBtn'),
   reviewModal: document.getElementById('reviewModal'),
   reviewNodeList: document.getElementById('reviewNodeList'),
+  historyPanel: document.getElementById('historyPanel'),
+  historyTreeContainer: document.getElementById('historyTreeContainer'),
+  closeHistoryBtn: document.getElementById('closeHistoryBtn'),
   toast: document.getElementById('toast'),
   app: document.getElementById('app')
 };
@@ -145,7 +148,7 @@ function updateEndingActions(node) {
 function streamStoryText(text, onDone) {
   let index = 0;
   storyTextTimer = window.setInterval(() => {
-    index += text.length > 120 ? 3 : 2;
+    index += 1;
     els.storyText.textContent = text.slice(0, index);
 
     if (index >= text.length) {
@@ -153,7 +156,7 @@ function streamStoryText(text, onDone) {
       els.storyText.textContent = text;
       onDone?.();
     }
-  }, 28);
+  }, 45);
 }
 
 export function renderChoices(choices, options = {}) {
@@ -406,3 +409,95 @@ export function applyEffects(effects = []) {
     els.app.classList.remove(...effectClasses);
   }, 950);
 }
+
+// ====================== History Tree Panel ======================
+
+let historyNodeHandler = null;
+
+export function setHistoryNodeHandler(handler) {
+  historyNodeHandler = handler;
+}
+
+export function showHistoryPanel() {
+  els.historyPanel?.classList.remove('hidden');
+}
+
+export function hideHistoryPanel() {
+  els.historyPanel?.classList.add('hidden');
+}
+
+export function isHistoryPanelOpen() {
+  return els.historyPanel && !els.historyPanel.classList.contains('hidden');
+}
+
+export function renderHistoryTree(nodesMap, currentNodeId, playerPath = []) {
+  if (!els.historyTreeContainer) return;
+  els.historyTreeContainer.innerHTML = '';
+
+  // Collect and sort pd_node_* entries
+  const pdNodes = Object.entries(nodesMap)
+    .filter(([id]) => id.startsWith('pd_node_'))
+    .sort(([a], [b]) => {
+      const numA = parseInt(a.replace('pd_node_', ''), 10);
+      const numB = parseInt(b.replace('pd_node_', ''), 10);
+      return numA - numB;
+    });
+
+  if (pdNodes.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'history-empty';
+    empty.textContent = '还没有推演历史';
+    els.historyTreeContainer.appendChild(empty);
+    return;
+  }
+
+  // Build a map of choices taken from playerPath
+  const choiceMap = {};
+  for (const entry of playerPath) {
+    if (entry.current_node_id && entry.choice_content) {
+      choiceMap[entry.current_node_id] = entry.choice_content;
+    }
+  }
+
+  for (const [nodeId, node] of pdNodes) {
+    const item = document.createElement('div');
+    item.className = 'history-node';
+    if (nodeId === currentNodeId) {
+      item.classList.add('active');
+    }
+
+    const idx = document.createElement('div');
+    idx.className = 'history-node-index';
+    const num = parseInt(nodeId.replace('pd_node_', ''), 10);
+    idx.textContent = `第 ${num} 步`;
+
+    const text = document.createElement('div');
+    text.className = 'history-node-text';
+    text.textContent = node.text || node.content || '空白节点';
+
+    item.append(idx, text);
+
+    // Show the choice that was made at this node
+    const choiceMade = choiceMap[nodeId];
+    if (choiceMade) {
+      const choiceEl = document.createElement('div');
+      choiceEl.className = 'history-node-choice';
+      choiceEl.textContent = `→ ${choiceMade}`;
+      item.appendChild(choiceEl);
+    }
+
+    item.addEventListener('click', () => {
+      historyNodeHandler?.(nodeId);
+    });
+
+    els.historyTreeContainer.appendChild(item);
+  }
+
+  // Auto-scroll to active node
+  const activeEl = els.historyTreeContainer.querySelector('.history-node.active');
+  if (activeEl) {
+    activeEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+}
+
+els.closeHistoryBtn?.addEventListener('click', hideHistoryPanel);

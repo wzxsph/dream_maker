@@ -28,7 +28,12 @@ import {
   showLoading,
   showPresetAd,
   showStoryPage,
-  showToast
+  showToast,
+  showHistoryPanel,
+  hideHistoryPanel,
+  renderHistoryTree,
+  setHistoryNodeHandler,
+  isHistoryPanelOpen
 } from './ui.js';
 import { currentNodeStorageKey, getStoryIdFromHash, unlockedPaywallStorageKey } from './utils.js';
 
@@ -137,6 +142,14 @@ function renderCurrentNode() {
   renderNode(node);
   persistCurrentNode();
   maybeShowPaywallAd(node);
+  refreshHistoryTreeIfOpen();
+}
+
+function refreshHistoryTreeIfOpen() {
+  if (isHistoryPanelOpen()) {
+    const session = state;
+    renderHistoryTree(session.nodesMap, session.currentNodeId, session.playerPath || []);
+  }
 }
 
 function maybeShowPaywallAd(node) {
@@ -321,6 +334,10 @@ async function showStoryReady(storyId, session) {
   stopIntroPolling();
   clearAutoEnterTimer();
   introShownAt = 0;
+
+  // 同步故事的 narrative_mode 到全局状态，确保选项C等模式相关UI正确渲染
+  window.currentNarrativeMode = session.narrative_mode || 'web_novel';
+
   initStory(session);
   setStoryTitle(session.title);
 
@@ -599,7 +616,32 @@ closeReviewBtn.addEventListener('click', hideReviewModal);
 
 document.getElementById('exitStoryBtn')?.addEventListener('click', () => {
   showToast('推演已结束，返回首页');
+  hideHistoryPanel();
   window.location.hash = '#/';
+});
+
+document.getElementById('historyTreeBtn')?.addEventListener('click', async () => {
+  if (isHistoryPanelOpen()) {
+    hideHistoryPanel();
+    return;
+  }
+  // Fetch the latest session to get playerPath
+  try {
+    const freshSession = await getStory(state.storyId);
+    renderHistoryTree(state.nodesMap, state.currentNodeId, freshSession.player_path || []);
+  } catch {
+    renderHistoryTree(state.nodesMap, state.currentNodeId, []);
+  }
+  showHistoryPanel();
+});
+
+setHistoryNodeHandler((nodeId) => {
+  try {
+    goToNode(nodeId);
+    renderCurrentNode();
+  } catch (e) {
+    showToast('节点不存在: ' + e.message);
+  }
 });
 
 import { setChoiceHandler } from './ui.js';

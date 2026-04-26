@@ -941,3 +941,147 @@ textarea:focus {
     overflow-y: auto;
   }
 }
+
+/* ========================= History Tree Panel ========================= */
+.history-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(380px, 85vw);
+  height: 100%;
+  background: rgba(16, 18, 27, 0.92);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-left: 1px solid var(--panel-border-highlight);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.history-panel:not(.hidden) {
+  transform: translateX(0);
+}
+
+.history-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.history-panel-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.history-panel-header .ghost-btn {
+  font-size: 1.5rem;
+  padding: 4px 10px;
+  min-width: unset;
+  line-height: 1;
+}
+
+.history-tree-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 32px;
+}
+
+/* Tree node items */
+.history-node {
+  position: relative;
+  padding: 12px 14px 12px 28px;
+  margin-bottom: 4px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  border: 1px solid transparent;
+}
+
+.history-node:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: var(--panel-border-highlight);
+}
+
+.history-node.active {
+  background: rgba(139, 92, 246, 0.18);
+  border-color: var(--accent);
+}
+
+/* Vertical connector line */
+.history-node::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--panel-border-highlight);
+}
+
+.history-node:first-child::before {
+  top: 50%;
+}
+
+.history-node:last-child::before {
+  bottom: 50%;
+}
+
+/* Dot on the line */
+.history-node::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--panel-border-highlight);
+  border: 2px solid var(--page-bg);
+  z-index: 1;
+}
+
+.history-node.active::after {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.history-node-index {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.history-node-text {
+  font-size: 0.85rem;
+  color: var(--text-main);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.history-node-choice {
+  font-size: 0.72rem;
+  color: var(--accent-strong);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.history-empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 40px 0;
+  font-size: 0.9rem;
+}
