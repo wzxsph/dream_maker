@@ -58,7 +58,7 @@ export function buildContinueChunkPrompt({
 1. start_node.text 第一小句必须点名“用户刚才选择”造成的直接结果。
 2. 新增事件不能凭空跳出陌生人或完全未提及的关键证物。
 
-\${modeInstruction}
+${modeInstruction}
 
 ${graphRule}
 
