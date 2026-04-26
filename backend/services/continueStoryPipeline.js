@@ -17,7 +17,11 @@ import { validateChunkGraph } from './graphValidator.js';
 import { ensurePaywallForChunk2, stripPaywallsOutsideChunk2 } from './paywallService.js';
 import { moderateChunk, validateIntervention } from './moderationService.js';
 import { httpError } from '../utils/errors.js';
-import { normalizeStoryResult, reinforceChunkContinuity } from './storyNormalizer.js';
+import {
+  normalizeStoryResult,
+  reinforceChunkContinuity,
+  repairChunkGraphForArchitecture
+} from './storyNormalizer.js';
 import { compactStoryCards, syncStoryCards } from './storyCardService.js';
 
 export async function continueStoryPipeline({
@@ -29,29 +33,17 @@ export async function continueStoryPipeline({
 }) {
   const session = await loadStorySession(storyId);
 
-  if (session.current_chunk_index >= session.max_chunks) {
-    throw httpError(400, '故事已经结束');
-  }
-
   const allNodes = getAllNodes(session);
   if (!allNodes[currentNodeId]) {
     throw httpError(400, 'current_node_id 不存在');
   }
 
-  const nextChunkIndex = session.current_chunk_index + 1;
-  const currentNode = allNodes[currentNodeId];
-
-  if (currentNode?.is_paywall) {
-    const existingNextChunk = session.chunks.find((chunk) => chunk.chunk_index === nextChunkIndex);
-    if (existingNextChunk) {
-      return {
-        story_id: session.story_id,
-        chunk: existingNextChunk,
-        story_state: session.story_state
-      };
-    }
+  const currentChunkIndex = getNodeChunkIndex(session, currentNodeId);
+  if (currentChunkIndex >= session.max_chunks) {
+    throw httpError(400, '故事已经结束');
   }
 
+  const nextChunkIndex = currentChunkIndex + 1;
   const normalizedMode = mode === 'rewrite' ? 'rewrite' : 'continue';
   const normalizedIntervention =
     normalizedMode === 'rewrite' ? validateIntervention(intervention) : '';
@@ -71,6 +63,17 @@ export async function continueStoryPipeline({
       currentNodeId,
       intervention: normalizedIntervention
     });
+  }
+
+  const existingNextChunk = session.chunks.find((chunk) => chunk.chunk_index === nextChunkIndex);
+  if (existingNextChunk && normalizedMode === 'continue') {
+    await saveStorySession(session);
+    return {
+      story_id: session.story_id,
+      chunk: existingNextChunk,
+      story_state: session.story_state,
+      prebuilt: true
+    };
   }
 
   let chunkResult;
@@ -100,6 +103,7 @@ export async function continueStoryPipeline({
     chunkResult = await parseAndValidateAiJson(chunkText, (result) => {
       normalizeStoryResult(result);
       reinforceChunkContinuity(result, continuityContext);
+      repairChunkGraphForArchitecture(result, session.max_chunks);
       validateStoryResult(result);
       if (result.chunk.chunk_index !== nextChunkIndex) {
         throw new Error(`chunk_index 必须是 ${nextChunkIndex}`);
@@ -116,6 +120,7 @@ export async function continueStoryPipeline({
 
   normalizeStoryResult(chunkResult);
   reinforceChunkContinuity(chunkResult, continuityContext);
+  repairChunkGraphForArchitecture(chunkResult, session.max_chunks);
   validateStoryResult(chunkResult);
 
   if (chunkResult.chunk.chunk_index !== nextChunkIndex) {
@@ -141,4 +146,13 @@ export async function continueStoryPipeline({
     chunk: chunkResult.chunk,
     story_state: session.story_state
   };
+}
+
+function getNodeChunkIndex(session, nodeId) {
+  const indexed = session.node_index?.[nodeId]?.chunk_index;
+  if (indexed) {
+    return indexed;
+  }
+
+  return session.chunks?.find((chunk) => chunk.nodes?.[nodeId])?.chunk_index || 0;
 }

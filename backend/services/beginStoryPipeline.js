@@ -16,7 +16,11 @@ import { loadStorySession, saveStorySession } from './storageService.js';
 import { mergeStatePatch } from './storyStateService.js';
 import { mergeChunk } from './storySessionService.js';
 import { buildStoryCards } from './storyCardService.js';
-import { normalizeStoryResult, reinforceChunkContinuity } from './storyNormalizer.js';
+import {
+  normalizeStoryResult,
+  reinforceChunkContinuity,
+  repairChunkGraphForArchitecture
+} from './storyNormalizer.js';
 import { validateChunkGraph } from './graphValidator.js';
 import { moderateChunk } from './moderationService.js';
 import { ensurePaywallForChunk2, stripPaywallsOutsideChunk2 } from './paywallService.js';
@@ -116,6 +120,7 @@ export async function beginStoryPipeline({ storyId, userPrompt }, options = {}) 
     chunkResult.chunk.chunk_index = 1;
     chunkResult.chunk.chunk_id = 'chunk_1';
   }
+  repairChunkGraphForArchitecture(chunkResult, session.max_chunks);
 
   // 校验图结构与内容安全
   validateChunkGraph(chunkResult.chunk, session.max_chunks);

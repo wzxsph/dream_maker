@@ -8,6 +8,8 @@ export function createSession({ storyId, title, synopsis = '', userPrompt = '', 
     synopsis,
     userPrompt,
     status,
+    generation_status: firstChunk ? 'ready' : 'pending',
+    generated_chunk_count: firstChunk ? 1 : 0,
     max_chunks: STORY_MAX_CHUNKS,
     current_chunk_index: 0,
     story_state: storyState || {

@@ -35,7 +35,29 @@
           <div id="introBadge">故事即将开始</div>
           <h1 id="introTitle"></h1>
           <div id="introSynopsis"></div>
-          <button id="beginBtn" class="primary-btn">开始造梦</button>
+          <div id="generationProgress" aria-label="生成进度">
+            <div id="progressTrack">
+              <div id="progressFill"></div>
+            </div>
+            <div id="progressSteps">
+              <div class="progress-step" data-step="0">
+                <span>S1</span>
+                <b>标题简介</b>
+              </div>
+              <div class="progress-step" data-step="1">
+                <span>S2</span>
+                <b>第一幕</b>
+              </div>
+              <div class="progress-step" data-step="2">
+                <span>S3</span>
+                <b>第二幕</b>
+              </div>
+              <div class="progress-step" data-step="3">
+                <span>S4</span>
+                <b>收束结尾</b>
+              </div>
+            </div>
+          </div>
           <p id="countdownHint" class="countdown-hint">生成中，请稍候...</p>
         </div>
       </section>
@@ -47,6 +69,7 @@
           <div id="choices"></div>
           <div id="endingActions" class="hidden">
             <p>故事结束</p>
+            <button id="reviewBtn" class="primary-btn">复盘全图</button>
             <button id="backHomeBtn" class="secondary-btn">重新造梦</button>
           </div>
         </div>
@@ -62,23 +85,9 @@
       <div id="continuePanel" class="overlay hidden">
         <div class="modal-card">
           <h2>下一幕即将展开</h2>
-          <p>继续当前剧情，或亲手改写命运。</p>
+          <p>当前选择会带你进入已经生成好的下一幕。</p>
           <button id="continueBtn" class="primary-btn">继续当前剧情</button>
-          <button id="rewriteBtn" class="secondary-btn">改写接下来的剧情</button>
           <button id="cancelContinueBtn" class="ghost-btn">取消</button>
-        </div>
-      </div>
-
-      <div id="rewriteModal" class="overlay hidden">
-        <div class="modal-card">
-          <h2>改写命运</h2>
-          <textarea
-            id="interventionInput"
-            maxlength="100"
-            placeholder="你想让接下来发生什么？例如：我要觉醒能听见所有人心声的系统"
-          ></textarea>
-          <button id="submitRewriteBtn" class="primary-btn">加入剧情</button>
-          <button id="skipRewriteBtn" class="secondary-btn">算了，继续当前剧情</button>
         </div>
       </div>
 
@@ -88,6 +97,14 @@
           <p id="adDescription">世界意志正在干扰你的命运。</p>
           <p id="adCountdown">5</p>
           <button id="adUnlockBtn" class="primary-btn" disabled>解锁剧情</button>
+        </div>
+      </div>
+
+      <div id="reviewModal" class="overlay hidden">
+        <div class="modal-card review-card">
+          <h2>复盘全图</h2>
+          <div id="reviewNodeList"></div>
+          <button id="closeReviewBtn" class="secondary-btn">返回剧情</button>
         </div>
       </div>
 

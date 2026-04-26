@@ -9,6 +9,7 @@ import { progressiveContinuePipeline } from './services/progressiveContinuePipel
 import { loadStorySession, saveStorySession, ensureStoryDirectory } from './services/storageService.js';
 import { syncStoryCards } from './services/storyCardService.js';
 import { getGenerationJob } from './services/generationJobService.js';
+import { normalizeStoryResult, repairChunkGraphForArchitecture } from './services/storyNormalizer.js';
 import { httpError } from './utils/errors.js';
 
 dotenv.config();
@@ -48,6 +49,9 @@ app.get(
   '/api/stories/:storyId',
   asyncRoute(async (req, res) => {
     const session = await loadStorySession(req.params.storyId);
+    if (repairSessionChunksForResponse(session)) {
+      await saveStorySession(session);
+    }
     res.json(session);
   })
 );
@@ -70,6 +74,9 @@ app.post(
     res.json({
       story_id: session.story_id,
       status: session.status,
+      generation_status: session.generation_status,
+      generated_chunk_count: session.generated_chunk_count || session.chunks.length,
+      max_chunks: session.max_chunks,
       has_chunk: session.chunks.length > 0
     });
   })
@@ -146,6 +153,42 @@ app.use((err, _req, res, _next) => {
     message: status >= 500 ? err.message || '服务异常' : err.message
   });
 });
+
+function repairSessionChunksForResponse(session) {
+  const before = JSON.stringify(session.chunks || []);
+  const previousGeneratedChunkCount = session.generated_chunk_count;
+  const previousGenerationStatus = session.generation_status;
+
+  for (const chunk of session.chunks || []) {
+    const result = {
+      state_patch: {
+        current_phase: '',
+        facts_add: [],
+        open_threads_add: [],
+        open_threads_resolved: [],
+        characters_update: []
+      },
+      chunk
+    };
+    normalizeStoryResult(result);
+    repairChunkGraphForArchitecture(result, session.max_chunks);
+  }
+
+  session.generated_chunk_count = session.chunks?.length || 0;
+  if (
+    session.generated_chunk_count >= session.max_chunks &&
+    session.generation_status !== 'error' &&
+    session.status !== 'error'
+  ) {
+    session.generation_status = 'ready';
+  }
+
+  return (
+    before !== JSON.stringify(session.chunks || []) ||
+    previousGeneratedChunkCount !== session.generated_chunk_count ||
+    previousGenerationStatus !== session.generation_status
+  );
+}
 
 app.listen(port, () => {
   console.log(`Zaomeng server running at http://localhost:${port}`);

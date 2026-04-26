@@ -19,19 +19,32 @@ export async function progressiveContinuePipeline({
 }) {
   const session = await loadStorySession(storyId);
 
-  if (session.current_chunk_index >= session.max_chunks) {
-    throw httpError(400, '故事已经结束');
-  }
-
   const allNodes = getAllNodes(session);
   if (!allNodes[currentNodeId]) {
     throw httpError(400, 'current_node_id 不存在');
   }
 
-  const nextChunkIndex = session.current_chunk_index + 1;
+  const currentChunkIndex = getNodeChunkIndex(session, currentNodeId);
+  if (currentChunkIndex >= session.max_chunks) {
+    throw httpError(400, '故事已经结束');
+  }
+
+  const nextChunkIndex = currentChunkIndex + 1;
   const normalizedMode = mode === 'rewrite' ? 'rewrite' : 'continue';
   const normalizedIntervention =
     normalizedMode === 'rewrite' ? validateIntervention(intervention) : '';
+
+  const existingNextChunk = session.chunks.find((chunk) => chunk.chunk_index === nextChunkIndex);
+  if (existingNextChunk && normalizedMode === 'continue') {
+    return {
+      story_id: storyId,
+      status: 'ready',
+      chunk: existingNextChunk,
+      story_state: session.story_state,
+      prebuilt: true
+    };
+  }
+
   const continuityContext = buildContinuityContext(session, {
     currentNodeId,
     choiceContent,
@@ -125,4 +138,13 @@ function buildFallbackPreviewNode({ continuityContext, nextChunkIndex }) {
 
 function normalizeTheme(theme) {
   return ['light', 'dark', 'danger', 'victory'].includes(theme) ? theme : 'dark';
+}
+
+function getNodeChunkIndex(session, nodeId) {
+  const indexed = session.node_index?.[nodeId]?.chunk_index;
+  if (indexed) {
+    return indexed;
+  }
+
+  return session.chunks?.find((chunk) => chunk.nodes?.[nodeId])?.chunk_index || 0;
 }

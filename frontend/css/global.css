@@ -319,7 +319,7 @@ textarea:focus {
 
 #introShell {
   display: grid;
-  grid-template-rows: auto auto 1fr auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
   height: 100%;
   min-height: 0;
   padding: 28px 22px;
@@ -352,6 +352,77 @@ textarea:focus {
   white-space: pre-wrap;
   overflow-y: auto;
   align-self: stretch;
+}
+
+#generationProgress {
+  display: grid;
+  gap: 12px;
+}
+
+#progressTrack {
+  height: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#progressFill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--teal));
+  transition: width 560ms ease;
+}
+
+#progressSteps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.progress-step {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.progress-step span {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.progress-step b {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.progress-step.done {
+  border-color: rgba(34, 197, 94, 0.42);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.progress-step.done span,
+.progress-step.done b {
+  color: var(--text-main);
+}
+
+.progress-step.active {
+  border-color: rgba(139, 92, 246, 0.52);
+  background: rgba(139, 92, 246, 0.13);
+}
+
+.progress-step.active span,
+.progress-step.active b {
+  color: var(--accent-strong);
 }
 
 #introShell .primary-btn {
@@ -453,6 +524,47 @@ textarea:focus {
   text-align: center;
   font-size: 2.5rem;
   font-weight: 900;
+}
+
+#reviewNodeList {
+  display: grid;
+  gap: 10px;
+  max-height: min(56vh, 460px);
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.review-node-btn {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-height: 64px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: var(--text-main);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.review-node-btn span {
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.review-node-btn b {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  font-weight: 750;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .toast {

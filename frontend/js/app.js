@@ -15,13 +15,18 @@ import {
   hideLoading,
   hideRewriteModal,
   renderNode,
+  setBeginButtonEnabled,
   setChoiceHandler,
+  setGenerationProgress,
   setStoryTitle,
   showContinuePanel,
   showHomePage,
+  showReviewModal,
   showIntroPage,
+  hideReviewModal,
   hideIntroPage,
   setIntroContent,
+  setCountdownHint,
   startBeginCountdown,
   resetBeginButton,
   showLoading,
@@ -42,10 +47,25 @@ const submitRewriteBtn = document.getElementById('submitRewriteBtn');
 const skipRewriteBtn = document.getElementById('skipRewriteBtn');
 const interventionInput = document.getElementById('interventionInput');
 const backHomeBtn = document.getElementById('backHomeBtn');
+const reviewBtn = document.getElementById('reviewBtn');
+const closeReviewBtn = document.getElementById('closeReviewBtn');
 const beginBtn = document.getElementById('beginBtn');
 let activePaywallNodeId = null;
 const activeJobs = new Set();
 let storyStatusPollTimer = null;
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function isStoryGenerated(session) {
+  return (
+    session.generation_status === 'ready' ||
+    session.status === 'ready' ||
+    session.status === 'active' ||
+    (session.max_chunks && (session.chunks?.length || 0) >= session.max_chunks)
+  );
+}
 
 function syncViewportHeight() {
   const height = window.visualViewport?.height || window.innerHeight;
@@ -106,12 +126,26 @@ async function handleCreateStory() {
   }
 
   try {
-    showLoading('正在构思故事...');
+    state.storyId = null;
+    stopIntroPolling();
+    setBeginButtonEnabled(false);
+    setIntroContent({
+      title: '正在生成标题...',
+      synopsis: '正在把你的脑洞压缩成一场短剧，标题和简介出来后会先展示在这里。'
+    });
+    setGenerationProgress({ intro_ready: false, generated_chunk_count: 0 });
+    setCountdownHint(buildGenerationHint({ intro_ready: false }));
+    showIntroPage();
+
     const result = await createStory(prompt);
     console.log('[handleCreateStory] got result:', result.story_id, result.title);
 
     // 跳转到 intro 页面，显示标题+简介
+    state.storyId = result.story_id;
+    setBeginButtonEnabled(true);
     setIntroContent({ title: result.title, synopsis: result.synopsis });
+    setGenerationProgress(result);
+    setCountdownHint(buildGenerationHint(result));
     showIntroPage();
     console.log('[handleCreateStory] intro page shown, setting hash...');
 
@@ -119,6 +153,8 @@ async function handleCreateStory() {
     window.location.hash = `#/story/${encodeURIComponent(result.story_id)}`;
     console.log('[handleCreateStory] hash set to:', window.location.hash);
   } catch (error) {
+    setBeginButtonEnabled(true);
+    showHomePage();
     showToast(error.message || '梦境生成失败，请换个脑洞试试');
   } finally {
     hideLoading();
@@ -141,6 +177,8 @@ async function loadStory(storyId) {
       case 'intro':
         // 后台正在生成，用户刚进入 intro 页面
         setIntroContent({ title: session.title, synopsis: session.synopsis || '' });
+        setGenerationProgress(session);
+        setCountdownHint(buildGenerationHint(session));
         showIntroPage();
         startIntroPolling(storyId);
         break;
@@ -148,18 +186,17 @@ async function loadStory(storyId) {
       case 'countdown':
         // 用户已点击开始造梦，等待倒计时结束
         setIntroContent({ title: session.title, synopsis: session.synopsis || '' });
+        setGenerationProgress(session);
+        setCountdownHint(buildGenerationHint(session));
         showIntroPage();
-        // chunk 可能在 countdown 触发前就生成好了
-        if (session.chunks?.length > 0) {
-          showStoryReady(storyId, session);
-        } else {
-          startIntroPolling(storyId);
-        }
+        startIntroPolling(storyId);
         break;
 
       case 'generating':
         // 后台仍在生成中，显示 intro 页面并等待
         setIntroContent({ title: session.title, synopsis: session.synopsis || '' });
+        setGenerationProgress(session);
+        setCountdownHint(buildGenerationHint(session));
         showIntroPage();
         startIntroPolling(storyId);
         break;
@@ -230,7 +267,7 @@ async function handleBeginStory() {
 
   // 开始 10 秒倒计时
   console.log('[handleBeginStory] starting countdown...');
-  startBeginCountdown(10, async () => {
+  startBeginCountdown(12, async () => {
     console.log('[handleBeginStory] countdown ended, waiting for story ready...');
     // 倒计时结束，查询故事是否就绪
     await waitForStoryReady(state.storyId);
@@ -241,7 +278,9 @@ async function waitForStoryReady(storyId) {
   console.log('[waitForStoryReady] checking story:', storyId);
   const session = await getStory(storyId);
   console.log('[waitForStoryReady] status:', session.status, 'chunks:', session.chunks?.length);
-  if (session.status === 'ready' || session.status === 'active') {
+  setGenerationProgress(session);
+  setCountdownHint(buildGenerationHint(session));
+  if (isStoryGenerated(session)) {
     console.log('[waitForStoryReady] calling showStoryReady');
     showStoryReady(storyId, session);
   } else if (session.status === 'error') {
@@ -263,11 +302,12 @@ function startIntroPolling(storyId) {
     try {
       const freshSession = await getStory(storyId);
       console.log('[startIntroPolling] poll status:', freshSession.status, 'chunks:', freshSession.chunks?.length);
-      if (freshSession.status === 'ready' || freshSession.status === 'active') {
+      setGenerationProgress(freshSession);
+      setCountdownHint(buildGenerationHint(freshSession));
+      if (isStoryGenerated(freshSession)) {
         stopIntroPolling();
-        console.log('[startIntroPolling] story ready, showing story...');
-        showStoryReady(storyId, freshSession);
-      } else if (freshSession.status === 'error') {
+      }
+      if (freshSession.status === 'error') {
         stopIntroPolling();
         showToast('故事生成失败，请重新开始');
         window.location.hash = '#/';
@@ -276,6 +316,20 @@ function startIntroPolling(storyId) {
       console.warn('[startIntroPolling] poll error:', e.message);
     }
   }, 2000);
+}
+
+function buildGenerationHint(session) {
+  if (session?.intro_ready === false) {
+    return '正在生成标题和内容简介...';
+  }
+
+  if (isStoryGenerated(session)) {
+    return '梦境已经铺好，点击开始后进入第一幕。';
+  }
+
+  const count = session.generated_chunk_count || session.chunks?.length || 0;
+  const labels = ['标题简介已完成，正在锁定开场...', '第一幕已完成，正在预写第二幕...', '第二幕已完成，正在收束结局...'];
+  return labels[Math.min(count, labels.length - 1)] || '故事生成中，请稍候...';
 }
 
 function stopIntroPolling() {
@@ -307,6 +361,17 @@ async function generateNext(mode, intervention = '', explicitChoice = null, opti
     };
 
     const progressive = await continueStoryProgressive(state.storyId, payload);
+
+    if (progressive.chunk) {
+      await delay(520);
+      mergeChunk(progressive.chunk);
+      clearPendingChoice();
+      activePaywallNodeId = null;
+      goToNode(progressive.chunk.start_node);
+      localStorage.setItem(currentNodeStorageKey(state.storyId), progressive.chunk.start_node);
+      renderCurrentNode();
+      return;
+    }
 
     if (progressive.preview_node) {
       mergePreviewNode(progressive.preview_node);
@@ -399,6 +464,30 @@ function handleChoice(choice) {
   }
 }
 
+function openReviewMode() {
+  const nodes = Object.values(state.nodesMap)
+    .filter(Boolean)
+    .sort((a, b) => nodeSortKey(a.node_id).localeCompare(nodeSortKey(b.node_id)));
+
+  showReviewModal(nodes, (nodeId) => {
+    try {
+      goToNode(nodeId);
+      renderCurrentNode();
+    } catch {
+      showToast('剧情节点丢失，请刷新后重试');
+    }
+  });
+}
+
+function nodeSortKey(nodeId = '') {
+  const match = nodeId.match(/^node_(\d+)(?:_([a-z]+|ending))?/);
+  if (!match) {
+    return nodeId;
+  }
+  const suffix = match[2] || '';
+  return `${String(Number(match[1])).padStart(3, '0')}_${suffix}`;
+}
+
 // ====================== 路由 ======================
 
 function handleRoute() {
@@ -458,6 +547,8 @@ backHomeBtn.addEventListener('click', () => {
   window.location.hash = '#/';
 });
 
+reviewBtn.addEventListener('click', openReviewMode);
+closeReviewBtn.addEventListener('click', hideReviewModal);
 beginBtn.addEventListener('click', handleBeginStory);
 
 setChoiceHandler(handleChoice);

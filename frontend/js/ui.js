@@ -14,6 +14,8 @@ const els = {
   introSynopsis: document.getElementById('introSynopsis'),
   beginBtn: document.getElementById('beginBtn'),
   countdownHint: document.getElementById('countdownHint'),
+  progressFill: document.getElementById('progressFill'),
+  progressSteps: document.querySelectorAll('.progress-step'),
   storyTitle: document.getElementById('storyTitle'),
   storyText: document.getElementById('storyText'),
   choices: document.getElementById('choices'),
@@ -27,6 +29,8 @@ const els = {
   adDescription: document.getElementById('adDescription'),
   adCountdown: document.getElementById('adCountdown'),
   adUnlockBtn: document.getElementById('adUnlockBtn'),
+  reviewModal: document.getElementById('reviewModal'),
+  reviewNodeList: document.getElementById('reviewNodeList'),
   toast: document.getElementById('toast'),
   app: document.getElementById('app')
 };
@@ -34,6 +38,7 @@ const els = {
 let choiceHandler = null;
 let toastTimer = null;
 let adTimer = null;
+let storyTextTimer = null;
 
 export function setChoiceHandler(handler) {
   choiceHandler = handler;
@@ -47,6 +52,7 @@ export function showHomePage() {
   els.homePage.classList.remove('hidden');
   els.introPage.classList.add('hidden');
   els.storyPage.classList.add('hidden');
+  hideReviewModal();
   document.body.dataset.theme = 'dark';
 }
 
@@ -69,6 +75,33 @@ export function showStoryPage() {
 export function setIntroContent({ title, synopsis }) {
   els.introTitle.textContent = title || '';
   els.introSynopsis.textContent = synopsis || '';
+}
+
+export function setCountdownHint(text) {
+  els.countdownHint.textContent = text || '';
+}
+
+export function setGenerationProgress(session = {}) {
+  const chunkCount = Number(session.generated_chunk_count || session.chunks?.length || 0);
+  const hasIntro = session.intro_ready ?? Boolean(session.story_id || session.title || session.synopsis || session.status);
+  const doneCount = Math.min(4, (hasIntro ? 1 : 0) + Math.max(0, chunkCount));
+  const percent = Math.round((doneCount / 4) * 100);
+
+  if (els.progressFill) {
+    els.progressFill.style.width = `${percent}%`;
+  }
+
+  for (const step of els.progressSteps || []) {
+    const index = Number(step.dataset.step || 0);
+    step.classList.toggle('done', index < doneCount);
+    step.classList.toggle('active', index === doneCount && doneCount < 4);
+  }
+}
+
+export function setBeginButtonEnabled(enabled, label = '开始造梦') {
+  els.beginBtn.disabled = !enabled;
+  els.beginBtn.textContent = enabled ? label : '正在准备';
+  els.beginBtn.classList.toggle('counting', !enabled);
 }
 
 let countdownTimer = null;
@@ -109,14 +142,47 @@ export function renderNode(node) {
     return;
   }
 
-  els.storyText.textContent = node.text;
-  renderChoices(node.choices || [], { generating: Boolean(node.is_generating) });
+  const text = node.text || node.content || '';
+  const choices = node.choices || [];
+  window.clearInterval(storyTextTimer);
+  els.storyText.textContent = '';
+  els.endingActions.classList.add('hidden');
+  renderChoices([], { generating: Boolean(node.is_generating) });
+
+  if (node.is_generating || text.length <= 18) {
+    els.storyText.textContent = text;
+    renderChoices(choices, { generating: Boolean(node.is_generating) });
+    updateEndingActions(node);
+  } else {
+    streamStoryText(text, () => {
+      renderChoices(choices);
+      updateEndingActions(node);
+    });
+  }
+
+  applyTheme(node.bg_theme);
+  applyEffects(node.ui_effect || []);
+}
+
+function updateEndingActions(node) {
   els.endingActions.classList.toggle(
     'hidden',
     node.is_generating || (node.choices || []).length > 0
   );
-  applyTheme(node.bg_theme);
-  applyEffects(node.ui_effect || []);
+}
+
+function streamStoryText(text, onDone) {
+  let index = 0;
+  storyTextTimer = window.setInterval(() => {
+    index += text.length > 120 ? 3 : 2;
+    els.storyText.textContent = text.slice(0, index);
+
+    if (index >= text.length) {
+      window.clearInterval(storyTextTimer);
+      els.storyText.textContent = text;
+      onDone?.();
+    }
+  }, 28);
 }
 
 export function renderChoices(choices, options = {}) {
@@ -210,6 +276,34 @@ export function showPresetAd(adConfig = {}, onUnlocked) {
   };
 
   els.adUnlockBtn.addEventListener('click', unlock);
+}
+
+export function showReviewModal(nodes, onSelect) {
+  els.reviewNodeList.innerHTML = '';
+
+  for (const node of nodes) {
+    const button = document.createElement('button');
+    button.className = 'review-node-btn';
+    button.type = 'button';
+
+    const id = document.createElement('span');
+    id.textContent = node.node_id;
+    const text = document.createElement('b');
+    text.textContent = node.text || node.content || '空白节点';
+
+    button.append(id, text);
+    button.addEventListener('click', () => {
+      hideReviewModal();
+      onSelect?.(node.node_id);
+    });
+    els.reviewNodeList.appendChild(button);
+  }
+
+  els.reviewModal.classList.remove('hidden');
+}
+
+export function hideReviewModal() {
+  els.reviewModal.classList.add('hidden');
 }
 
 export function applyTheme(bgTheme = 'dark') {
