@@ -101,8 +101,11 @@ export async function initialStoryPipeline({ userPrompt, narrativeMode = 'web_no
   });
   await saveStorySession(session);
 
-  // ========== 后台预生成完整三幕 ==========
-  if (hasApiKey()) {
+  // ========== 后台预生成 ==========
+  if (narrativeMode === 'past_deduction') {
+    // 过去推演模式：只生成第一个开场节点，不预生成全部幕
+    await generatePastDeductionOpening({ storyId, userPrompt: prompt, title: introResult.title, synopsis: introResult.synopsis });
+  } else if (hasApiKey()) {
     startGenerationJob(() => generateFullStory({ storyId, userPrompt: prompt, narrativeMode }));
   } else {
     // mock 模式：直接生成
@@ -126,14 +129,18 @@ export async function initialStoryPipeline({ userPrompt, narrativeMode = 'web_no
     await saveStorySession(session);
   }
 
+  const latestSession = await loadStorySession(storyId);
+
   return {
     story_id: storyId,
     title: introResult.title,
     synopsis: introResult.synopsis,
-    status: session.status,
-    generation_status: session.generation_status,
-    generated_chunk_count: session.generated_chunk_count,
-    max_chunks: session.max_chunks
+    narrative_mode: narrativeMode,
+    status: latestSession.status,
+    generation_status: latestSession.generation_status,
+    generated_chunk_count: latestSession.generated_chunk_count || latestSession.chunks?.length || 0,
+    max_chunks: latestSession.max_chunks,
+    chunks: narrativeMode === 'past_deduction' ? latestSession.chunks : undefined
   };
 }
 
@@ -291,3 +298,105 @@ function getFirstGenerateChoice(chunk) {
     .flatMap((node) => node.choices || [])
     .find((choice) => choice.next_node === '__GENERATE_NEXT__');
 }
+
+async function generatePastDeductionOpening({ storyId, userPrompt, title, synopsis }) {
+  const { buildPastDeductionNodePrompt } = await import('../prompts/pastDeductionNodePrompt.js');
+  const session = await loadStorySession(storyId);
+
+  try {
+    session.generation_status = 'generating';
+    session.pd_node_counter = 0;
+    await saveStorySession(session);
+
+    const nodeIndex = 1;
+    let nodeResult;
+
+    if (!hasApiKey()) {
+      nodeResult = {
+        state_patch: { current_phase: 'past_deduction_opening', facts_add: [], open_threads_add: [], open_threads_resolved: [], characters_update: [] },
+        node: {
+          node_id: `pd_node_${nodeIndex}`,
+          text: `你回到了那个令你遗憾的瞬间。周围的一切都和记忆中一样。你的心跳加速，这一次，你有机会做出不同的选择。`,
+          bg_theme: 'dark',
+          ui_effect: [],
+          choices: [
+            { content: '深呼吸，试着冷静下来', next_node: '__GENERATE_NEXT__' },
+            { content: '直接面对当时的困境', next_node: '__GENERATE_NEXT__' }
+          ]
+        }
+      };
+    } else {
+      const rawText = await callLLM({
+        systemPrompt: '你是写实互动推演引擎，只返回 JSON。',
+        userPrompt: buildPastDeductionNodePrompt({
+          storyState: session.story_state,
+          storyCards: compactStoryCards(session.cards || []),
+          continuityContext: {
+            current_node_id: null,
+            current_node_text: synopsis,
+            current_node_choices: [],
+            selected_choice: userPrompt,
+            intervention: '',
+            recent_player_path: [],
+            bridge_requirement: '这是开场第一个节点，请基于简介和用户的遗憾描述，直接带入那个瞬间的场景。'
+          },
+          recentNodes: [],
+          choiceContent: userPrompt,
+          intervention: '',
+          nodeIndex
+        }),
+        maxTokens: 1024,
+        temperature: 0.9
+      });
+
+      const parsed = safeJsonParse(rawText);
+      if (!parsed?.node) {
+        throw new Error('过去推演开场节点生成失败');
+      }
+      nodeResult = parsed;
+    }
+
+    // 规范化
+    const node = nodeResult.node;
+    node.node_id = node.node_id || `pd_node_${nodeIndex}`;
+    node.is_paywall = false;
+    node.paywall_type = null;
+    node.ad_config = null;
+    node.is_rewrite_point = false;
+    node.is_generating = false;
+    if (Array.isArray(node.choices)) {
+      node.choices.forEach(c => { c.next_node = '__GENERATE_NEXT__'; });
+    }
+
+    const chunk = {
+      chunk_id: `pd_chunk_${nodeIndex}`,
+      chunk_index: nodeIndex,
+      type: 'middle',
+      start_node: node.node_id,
+      end_nodes: [node.node_id],
+      nodes: { [node.node_id]: node }
+    };
+
+    if (nodeResult.state_patch) {
+      session.story_state = mergeStatePatch(session.story_state, nodeResult.state_patch);
+    }
+
+    session.chunks = [chunk];
+    session.node_index = { [node.node_id]: { chunk_id: chunk.chunk_id, chunk_index: nodeIndex } };
+    session.pd_node_counter = nodeIndex;
+    session.generation_status = 'ready';
+    session.status = 'ready';
+    session.generated_chunk_count = 1;
+    session.cards = buildStoryCards({ userPrompt, title, storyState: session.story_state });
+    await saveStorySession(session);
+
+    console.log(`[generatePastDeductionOpening] story ${storyId} opening node: ${node.node_id}`);
+  } catch (error) {
+    console.error(`[generatePastDeductionOpening] error for ${storyId}:`, error.message);
+    session.status = 'error';
+    session.generation_status = 'error';
+    session.error = error.message;
+    await saveStorySession(session);
+  }
+}
+

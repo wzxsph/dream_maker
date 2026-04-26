@@ -823,6 +823,14 @@ textarea:focus {
   cursor: not-allowed;
 }
 
+.exit-story-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 18px;
+}
+
 .toast {
   position: fixed;
   left: 50%;

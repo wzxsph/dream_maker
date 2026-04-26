@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { initialStoryPipeline } from './services/initialStoryPipeline.js';
 import { continueStoryPipeline } from './services/continueStoryPipeline.js';
 import { progressiveContinuePipeline } from './services/progressiveContinuePipeline.js';
+import { pastDeductionContinuePipeline } from './services/pastDeductionPipeline.js';
 import { loadStorySession, saveStorySession, ensureStoryDirectory } from './services/storageService.js';
 import { syncStoryCards } from './services/storyCardService.js';
 import { getGenerationJob } from './services/generationJobService.js';
@@ -100,6 +101,20 @@ app.get(
 app.post(
   '/api/stories/:storyId/continue',
   asyncRoute(async (req, res) => {
+    const session = await loadStorySession(req.params.storyId);
+    const isPastDeduction = session.narrative_mode === 'past_deduction';
+
+    if (isPastDeduction) {
+      const result = await pastDeductionContinuePipeline({
+        storyId: req.params.storyId,
+        currentNodeId: req.body?.current_node_id,
+        choiceContent: req.body?.choice_content,
+        mode: req.body?.mode,
+        intervention: req.body?.intervention
+      });
+      return res.json(result);
+    }
+
     const result = await continueStoryPipeline({
       storyId: req.params.storyId,
       currentNodeId: req.body?.current_node_id,
@@ -114,6 +129,20 @@ app.post(
 app.post(
   '/api/stories/:storyId/continue/progressive',
   asyncRoute(async (req, res) => {
+    const session = await loadStorySession(req.params.storyId);
+    const isPastDeduction = session.narrative_mode === 'past_deduction';
+
+    if (isPastDeduction) {
+      const result = await pastDeductionContinuePipeline({
+        storyId: req.params.storyId,
+        currentNodeId: req.body?.current_node_id,
+        choiceContent: req.body?.choice_content,
+        mode: req.body?.mode,
+        intervention: req.body?.intervention
+      });
+      return res.json(result);
+    }
+
     const result = await progressiveContinuePipeline({
       storyId: req.params.storyId,
       currentNodeId: req.body?.current_node_id,

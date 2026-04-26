@@ -178,40 +178,60 @@ async function handleCreateStory() {
     return;
   }
 
+  const isPastDeduction = window.currentNarrativeMode === 'past_deduction';
+
   try {
     state.storyId = null;
     stopIntroPolling();
     clearAutoEnterTimer();
-    setIntroContent({
-      title: '正在生成标题...',
-      synopsis: '正在把你的脑洞压缩成一场短剧，标题和简介出来后会先展示在这里。'
-    });
-    setGenerationProgress({ intro_ready: false, generated_chunk_count: 0 });
-    setCountdownHint(buildGenerationHint({ intro_ready: false }));
-    showIntroProgress({ resetTimer: true });
+
+    if (isPastDeduction) {
+      // 过去推演模式：显示 loading 而不是 intro 进度页
+      showLoading('正在推演你的遗憾瞬间...');
+    } else {
+      setIntroContent({
+        title: '正在生成标题...',
+        synopsis: '正在把你的脑洞压缩成一场短剧，标题和简介出来后会先展示在这里。'
+      });
+      setGenerationProgress({ intro_ready: false, generated_chunk_count: 0 });
+      setCountdownHint(buildGenerationHint({ intro_ready: false }));
+      showIntroProgress({ resetTimer: true });
+    }
 
     const result = await createStory({ prompt, narrative_mode: window.currentNarrativeMode });
     console.log('[handleCreateStory] got result:', result.story_id, result.title);
 
-    // 跳转到 intro 页面，显示标题+简介
     state.storyId = result.story_id;
-    setIntroContent({ title: result.title, synopsis: result.synopsis });
-    setGenerationProgress(result);
-    setCountdownHint(buildGenerationHint(result));
-    showIntroProgress();
-    console.log('[handleCreateStory] intro page shown, setting hash...');
 
-    // 更新 hash
-    const nextHash = `#/story/${encodeURIComponent(result.story_id)}`;
-    if (window.location.hash === nextHash) {
-      loadStory(result.story_id);
+    if (isPastDeduction) {
+      // 过去推演：直接进入故事页
+      hideLoading();
+      const nextHash = `#/story/${encodeURIComponent(result.story_id)}`;
+      if (window.location.hash === nextHash) {
+        loadStory(result.story_id);
+      } else {
+        window.location.hash = nextHash;
+      }
     } else {
-      window.location.hash = nextHash;
+      // 网文模式：显示 intro 进度页
+      setIntroContent({ title: result.title, synopsis: result.synopsis });
+      setGenerationProgress(result);
+      setCountdownHint(buildGenerationHint(result));
+      showIntroProgress();
+      console.log('[handleCreateStory] intro page shown, setting hash...');
+
+      const nextHash = `#/story/${encodeURIComponent(result.story_id)}`;
+      if (window.location.hash === nextHash) {
+        loadStory(result.story_id);
+      } else {
+        window.location.hash = nextHash;
+      }
+      console.log('[handleCreateStory] hash set to:', window.location.hash);
     }
-    console.log('[handleCreateStory] hash set to:', window.location.hash);
   } catch (error) {
     clearAutoEnterTimer();
     showHomePage();
+    hideLoading();
     showToast(error.message || '梦境生成失败，请换个脑洞试试');
   } finally {
     hideLoading();
@@ -307,6 +327,12 @@ async function showStoryReady(storyId, session) {
   // 如果是直接进入 story 页面，清空之前可能的 intro 状态
   hideIntroPage();
   showStoryPage();
+
+  // 显示/隐藏退出推演按钮
+  const exitActions = document.getElementById('exitStoryActions');
+  if (exitActions) {
+    exitActions.classList.toggle('hidden', session.narrative_mode !== 'past_deduction');
+  }
 
   const savedNodeId = localStorage.getItem(currentNodeStorageKey(storyId));
   if (savedNodeId && state.nodesMap[savedNodeId]) {
@@ -570,6 +596,11 @@ backHomeBtn.addEventListener('click', () => {
 
 reviewBtn.addEventListener('click', openReviewMode);
 closeReviewBtn.addEventListener('click', hideReviewModal);
+
+document.getElementById('exitStoryBtn')?.addEventListener('click', () => {
+  showToast('推演已结束，返回首页');
+  window.location.hash = '#/';
+});
 
 import { setChoiceHandler } from './ui.js';
 setChoiceHandler(handleChoice);
