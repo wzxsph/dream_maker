@@ -7,7 +7,7 @@
 
 import { buildPastDeductionNodePrompt } from '../prompts/pastDeductionNodePrompt.js';
 import { callLLM, hasApiKey } from './aiService.js';
-import { safeJsonParse } from '../utils/json.js';
+import { parseAndValidateAiJson } from './aiJsonService.js';
 import { loadStorySession, saveStorySession } from './storageService.js';
 import {
     getAllNodes,
@@ -76,10 +76,11 @@ export async function pastDeductionContinuePipeline({
             temperature: 0.9
         });
 
-        const parsed = safeJsonParse(rawText);
-        if (!parsed?.node) {
-            throw new Error('过去推演节点生成失败：AI 未返回有效 node');
-        }
+        const parsed = await parseAndValidateAiJson(rawText, (p) => {
+            if (!p?.node) {
+                throw new Error('过去推演节点生成失败：AI 未返回有效 node');
+            }
+        });
         nodeResult = parsed;
     }
 

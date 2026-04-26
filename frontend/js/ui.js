@@ -20,6 +20,7 @@ const els = {
   choices: document.getElementById('choices'),
   endingActions: document.getElementById('endingActions'),
   loadingOverlay: document.getElementById('loadingOverlay'),
+  loadingText: document.getElementById('loadingText'),
   continuePanel: document.getElementById('continuePanel'),
   nodeActions: document.getElementById('nodeActions'),
   regenerateNodeBtn: document.getElementById('regenerateNodeBtn'),

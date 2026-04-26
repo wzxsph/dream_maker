@@ -62,6 +62,17 @@ export function safeJsonParse(text) {
   try {
     return JSON.parse(raw);
   } catch {
-    return extractJson(raw);
+    // Attempt basic fix for unescaped quotes inside string values (a common LLM error)
+    // Replace " that are not preceded by a colon/brace/bracket/comma/space and not followed by a comma/brace/bracket/space with \"
+    // Better yet, just use a heuristic to replace quotes that look like content
+    const cleaned = raw.replace(/([\\u4e00-\\u9fa5A-Za-z0-9])"([\\u4e00-\\u9fa5A-Za-z0-9])/g, '$1\\"$2')
+      .replace(/([，。！？、…])"([\\u4e00-\\u9fa5])/g, '$1\\"$2')
+      .replace(/([\\u4e00-\\u9fa5])"([，。！？、…])/g, '$1\\"$2');
+
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      return extractJson(cleaned);
+    }
   }
 }

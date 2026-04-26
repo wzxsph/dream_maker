@@ -59,6 +59,7 @@ ${buildArchitecturePromptSection({ nextChunkIndex: 1 })}
 8. 不要写广告，不要写 __GENERATE_NEXT__。
 9. story_state 只保存摘要；characters、facts、open_threads、constraints 每项最多 2 条。
 10. story_state.architecture.ending_lane 只能是 truth_reversal、price_escape、role_swap。
+11. 绝对禁止在 JSON 字符串值内部使用未转义的英文双引号（"），请一律替换为中文引号（“”）或进行转义（\\"）。
 
 ${modeInstruction}
 

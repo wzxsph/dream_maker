@@ -1,5 +1,5 @@
 import { buildPreviewNodePrompt } from '../prompts/previewNodePrompt.js';
-import { safeJsonParse } from '../utils/json.js';
+import { parseAndValidateAiJson } from './aiJsonService.js';
 import { callLLM, hasApiKey } from './aiService.js';
 import { continueStoryPipeline } from './continueStoryPipeline.js';
 import { getAllNodes, buildContinuityContext } from './storySessionService.js';
@@ -94,8 +94,10 @@ async function generatePreviewNode({ session, continuityContext, nextChunkIndex 
       maxTokens: 360,
       temperature: 0.7
     });
-    const parsed = safeJsonParse(rawText);
-    const node = parsed?.node || {};
+    const parsed = await parseAndValidateAiJson(rawText, (p) => {
+      if (!p?.node) throw new Error("无效的 node");
+    });
+    const node = parsed.node;
 
     return {
       node_id: node.node_id || fallback.node_id,

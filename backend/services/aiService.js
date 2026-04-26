@@ -81,10 +81,9 @@ async function callAnthropicCompatible({ systemPrompt, userPrompt, maxTokens, te
   const baseUrl = process.env.AI_BASE_URL || 'https://api.minimaxi.com/anthropic';
   const model = process.env.AI_MODEL || 'MiniMax-M2.7';
   let maxTokensVal = Number(maxTokens || process.env.AI_MAX_TOKENS || 2048);
-  // MiniMax API 不接受 -1，当作 4096 处理
-  if (maxTokensVal === -1) {
-    maxTokensVal = 4096;
-  }
+  // 对于支持 thinking 的大模型，生成的思考过程消耗极多 token
+  // 必须确保 maxTokens 很大，否则返回被截断。最高到 8192 或更高。
+  maxTokensVal = Math.max(maxTokensVal, 8192);
   const payload = {
     model,
     system: systemPrompt,
@@ -143,9 +142,9 @@ async function callAnthropicMessages({ baseUrl, payload, fallbackModel = null })
   const content = data?.content;
   const text = Array.isArray(content)
     ? content
-        .filter((block) => block?.type === 'text' && typeof block.text === 'string')
-        .map((block) => block.text)
-        .join('\n')
+      .filter((block) => block?.type === 'text' && typeof block.text === 'string')
+      .map((block) => block.text)
+      .join('\n')
     : '';
 
   console.log(`[callAnthropicMessages] extracted text length: ${text?.length}, preview: ${text?.substring(0, 200)}`);

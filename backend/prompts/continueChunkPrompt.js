@@ -57,6 +57,7 @@ export function buildContinueChunkPrompt({
 通用连贯性：
 1. start_node.text 第一小句必须点名“用户刚才选择”造成的直接结果。
 2. 新增事件不能凭空跳出陌生人或完全未提及的关键证物。
+3. 绝对禁止在 JSON 字符串值内部使用未转义的英文双引号（"），请一律替换为中文引号（“”）或进行转义（\\"）。
 
 ${modeInstruction}
 

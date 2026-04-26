@@ -211,12 +211,13 @@ async function generateOpeningChunkResult({ userPrompt, title, synopsis, narrati
     temperature: 1.0
   });
 
-  console.log(`[generateFullStory] opening layer raw length: ${contentText?.length}`);
+  console.log(`[generateFullStory] opening layer raw text:`, contentText);
 
-  const contentParsed = safeJsonParse(contentText);
-  if (!contentParsed?.content?.fragments) {
-    throw new Error('Layer 1 未返回有效 fragments');
-  }
+  const contentParsed = await parseAndValidateAiJson(contentText, (p) => {
+    if (!p?.content?.fragments) {
+      throw new Error('Layer 1 未返回有效 fragments');
+    }
+  });
 
   const chunkJson = await fragmentsToChunkJson(contentParsed.content.fragments, 1, 3);
 
@@ -259,7 +260,7 @@ async function generateContinuationChunkResult({
     })
   });
 
-  return parseAndValidateAiJson(chunkText, (result) => {
+  const parsedChunk = await parseAndValidateAiJson(chunkText, (result) => {
     normalizeStoryResult(result);
     reinforceChunkContinuity(result, continuityContext);
     repairChunkGraphForArchitecture(result, session.max_chunks);
@@ -271,6 +272,8 @@ async function generateContinuationChunkResult({
     validateChunkGraph(result.chunk, session.max_chunks);
     moderateChunk(result.chunk);
   });
+
+  return parsedChunk;
 }
 
 function applyChunkResultToSession(session, chunkResult) {
@@ -349,10 +352,11 @@ async function generatePastDeductionOpening({ storyId, userPrompt, title, synops
         temperature: 0.9
       });
 
-      const parsed = safeJsonParse(rawText);
-      if (!parsed?.node) {
-        throw new Error('过去推演开场节点生成失败');
-      }
+      const parsed = await parseAndValidateAiJson(rawText, (p) => {
+        if (!p?.node) {
+          throw new Error('过去推演开场节点生成失败');
+        }
+      });
       nodeResult = parsed;
     }
 
