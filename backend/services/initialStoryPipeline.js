@@ -117,7 +117,7 @@ export async function initialStoryPipeline({ userPrompt }) {
     }));
     applyChunkResultToSession(session, buildMockContinueChunk({
       nextChunkIndex: 3,
-      choiceContent: '趁世界恢复流动继续追击'
+      choiceContent: '抓住对方露出的破绽继续追证'
     }));
     session.cards = buildStoryCards({ userPrompt: prompt, title: introResult.title, storyState: session.story_state });
     session.generation_status = 'ready';
@@ -169,7 +169,7 @@ async function generateFullStory({ storyId, userPrompt }) {
     const chunk3Result = await generateContinuationChunkResult({
       session,
       currentNodeId: 'node_7',
-      choiceContent: getFirstGenerateChoice(chunk2Result.chunk)?.content || '趁世界恢复流动继续追击',
+      choiceContent: getFirstGenerateChoice(chunk2Result.chunk)?.content || '抓住对方露出的破绽继续追证',
       nextChunkIndex: 3
     });
     applyChunkResultToSession(session, chunk3Result);

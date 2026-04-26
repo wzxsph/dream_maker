@@ -6,7 +6,7 @@ const DEFAULT_AD_CONFIG = {
 };
 
 const DEFAULT_PAYWALL_STORY_TEXT =
-  '就在真相即将继续推进时，周围的一切忽然停滞。刺耳的系统提示音响起：【剧情权限被世界意志暂时锁定。】你必须先解开这道限制，才能把下一幕推向真正的反击。';
+  '真相逼近关键处，屏幕短暂弹出一张互动挑战卡。你按住即将散乱的证据和情绪，等这几秒过去，就能继续把对方的破绽追到底。';
 
 export function ensurePaywallForChunk2(chunk) {
   if (chunk.chunk_index !== 2) {
@@ -21,7 +21,7 @@ export function ensurePaywallForChunk2(chunk) {
     return chunk;
   }
 
-  if (!target.text || /广告|赞助展示|抖音 AI 创变者黑客松/.test(target.text)) {
+  if (!target.text || /广告|赞助展示|抖音 AI 创变者黑客松|世界意志|剧情权限|世界恢复流动/.test(target.text)) {
     target.text = DEFAULT_PAYWALL_STORY_TEXT;
   }
   target.bg_theme = 'danger';
@@ -35,7 +35,7 @@ export function ensurePaywallForChunk2(chunk) {
   target.is_rewrite_point = false;
   target.choices = [
     {
-      content: '趁世界恢复流动，继续追击真相',
+      content: '抓住对方露出的破绽继续追证',
       next_node: '__GENERATE_NEXT__'
     }
   ];

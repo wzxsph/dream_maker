@@ -22,6 +22,8 @@ export function buildPreviewNodePrompt({
 5. bg_theme 只能是 "light"、"dark"、"danger"、"victory"。
 6. choices 必须是空数组，完整选项由后台完整 chunk 生成后补齐。
 7. 预览必须遵守场景锁和 ending_lane，不跳新地点、不提前泄露结局。
+8. 不要使用“下一秒，局势变化”“命运彻底改变”等泛桥接；必须写具体人物反应、具体物件变化或具体证据露头。
+9. 不要凭空引入陌生关键人物或万能证据，预览只能推进一个小动作或一个可见线索。
 
 ${buildArchitecturePromptSection({ nextChunkIndex })}
 

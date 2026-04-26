@@ -23,7 +23,7 @@ function buildMockChunk2({ intervention, choiceContent }) {
         `玩家选择继续线索：${choiceContent || '进入下一幕'}`,
         intervention ? `玩家改写剧情：${intervention}` : '玩家选择自然续写当前剧情'
       ],
-      open_threads_add: ['顾沉开始怀疑林婉儿', '世界意志准备强行修正剧情'],
+      open_threads_add: ['顾沉开始怀疑林婉儿', '林婉儿还藏着一份能反咬主角的说辞'],
       open_threads_resolved: ['主角是否能当场扭转被陷害的局面'],
       characters_update: [
         {
@@ -102,7 +102,7 @@ function buildMockChunk2({ intervention, choiceContent }) {
         },
         node_7: {
           node_id: 'node_7',
-          text: '就在真相即将彻底公开时，世界忽然卡顿。刺耳警报在你脑海里炸开：【剧情权限被世界意志暂时锁定。】林婉儿的表情停在惊恐的一瞬，而你知道，下一步就是彻底反击。',
+          text: '真相逼近关键处，林婉儿忽然攥紧手机，像是还握着最后一套说辞。顾沉的迟疑已经动摇，而你知道，只要补上证据链的最后一环，就能让她再也无法狡辩。',
           bg_theme: 'danger',
           ui_effect: ['flash_red', 'glitch', 'shake'],
           is_paywall: true,
@@ -116,7 +116,7 @@ function buildMockChunk2({ intervention, choiceContent }) {
           is_rewrite_point: false,
           choices: [
             {
-              content: '趁世界恢复流动，继续追击真相',
+              content: '抓住对方露出的破绽继续追证',
               next_node: '__GENERATE_NEXT__'
             }
           ]
@@ -135,7 +135,7 @@ function buildMockChunk3({ intervention, choiceContent }) {
         intervention ? `改写影响延续到结局：${intervention}` : '主角以已有证据完成反击'
       ],
       open_threads_add: [],
-      open_threads_resolved: ['顾沉开始怀疑林婉儿', '世界意志准备强行修正剧情', '对手真正的计划尚未公开'],
+      open_threads_resolved: ['顾沉开始怀疑林婉儿', '林婉儿还藏着一份能反咬主角的说辞', '对手真正的计划尚未公开'],
       characters_update: [
         {
           name: '林婉儿',

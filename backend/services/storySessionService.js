@@ -125,7 +125,7 @@ export function buildContinuityContext(session, { currentNodeId, choiceContent, 
     intervention: intervention || '',
     recent_player_path: recentPath,
     bridge_requirement:
-      '新 chunk 的 start_node.text 必须直接承接 current_node_text 和 selected_choice，写出这个选择造成的下一秒结果。'
+      '新 chunk 的 start_node.text 必须直接承接 current_node_text 和 selected_choice，写出这个选择造成的具体结果；优先引用上一节点的人物、物件、证据或动作，避免泛写“下一秒”。'
   };
 }
 

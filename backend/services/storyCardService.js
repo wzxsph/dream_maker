@@ -48,6 +48,8 @@ export function buildStoryCards({ userPrompt, title, storyState }) {
       pacing: '每个节点先给可见压力，再给信息差、反转或强情绪推进',
       choice_rule: '普通节点必须提供具体动作二选一，禁止只写“继续”',
       scene_rule: '不跳地点、不跳时间、不切换主视角，始终围绕小场景内的即时危机',
+      logic_rule: '新事实必须来自已出现的人、物件、动机或伏笔，禁止天降权威、万能证据和无因反转',
+      webnovel_rule: '主角主动抓证据和借规则反击，压力源有自保动机，爽点要逐步累积且符合常识',
       ad_rule: '第二幕末尾插入一次抖音 AI 创变者黑客松大赛 demo 广告',
       constraints: safeList(storyState?.constraints, 4)
     })

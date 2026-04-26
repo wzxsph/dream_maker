@@ -119,8 +119,8 @@ function buildFallbackPreviewNode({ continuityContext, nextChunkIndex }) {
   const nodeId = getChunkStartNodeId(nextChunkIndex);
   const selectedChoice = continuityContext.selected_choice || '';
   const text = /等待|继续|下一幕|后续/.test(selectedChoice)
-    ? '短暂的沉默后，眼前的局势先一步发生变化。新的危机正在靠近，而你已经没有退路。'
-    : '你的动作打破了僵局，所有人的目光瞬间聚焦过来。下一幕的反击，正在这一秒展开。';
+    ? '你顺着刚才露出的破绽看过去，现场有人先避开了目光。那个细小反应，比任何解释都更像答案。'
+    : '你的动作打破了僵局，对方下意识护住身边的东西。真正的问题不在争吵里，而在他不肯让你碰到的细节里。';
 
   return {
     node_id: nodeId,

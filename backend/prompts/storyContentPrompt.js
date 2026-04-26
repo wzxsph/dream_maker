@@ -43,6 +43,16 @@ ${buildArchitecturePromptSection({ nextChunkIndex: 1 })}
 9. story_state 只保存摘要；characters、facts、open_threads、constraints 每项最多 2 条。
 10. story_state.architecture.ending_lane 只能是 truth_reversal、price_escape、role_swap。
 
+网文质感与因果要求：
+1. 第一幕必须形成“压力源行动 -> 主角选择 -> 直接后果 -> 发现具体线索”的因果链。
+2. 线索必须来自简介或本场景可见物件，不要凭空出现神秘文件、突然到场的高层、万能监控或陌生证人。
+3. 压力源的行为要有利益、面子、职位、亲情、嫉妒、误会等可理解动机，不要单纯无脑作恶。
+4. 主角要主动且聪明：抓证据、试探话术、保护自己、借力规则，而不是被动等待别人救。
+5. 分支 A/B 只改变手段和代价，片段3 汇合时要承认两个分支都合理地走到同一个锁点。
+6. 爽点要克制但明确：读者能感觉主角拿到一个小优势，而不是靠天降大人物直接翻盘。
+7. 避免空泛句式：不要连续使用“下一秒”“空气凝固”“所有人的人生彻底改变”等模板化句子。
+8. 如果题材是职场/校园/家庭/豪门，流程要贴近常识：请假、查账、监控、报警、继承、处分都需要合理触发条件。
+
 返回格式：
 {
   "story_state": {
@@ -61,6 +71,7 @@ ${buildArchitecturePromptSection({ nextChunkIndex: 1 })}
       "time_lock": "10-30 分钟",
       "cast_limit": "最多 3 个有姓名角色",
       "choice_contract": "玩家选择改变手段、代价、谁先暴露，不改变结局走向",
+      "quality_contract": "每个新事实都要由已出现的动作、物件、动机或伏笔推出",
       "ending_lane": "truth_reversal | price_escape | role_swap",
       "ending_promise": "该结局走向的一句话承诺"
     }

@@ -37,7 +37,7 @@ export function buildMockInitialState(userPrompt) {
       }
     ],
     facts: [`用户脑洞：${userPrompt}`, '主角在命运转折点醒来，旧剧情即将重演'],
-    open_threads: ['对手真正的计划尚未公开', '世界意志似乎在维护原剧情'],
+    open_threads: ['对手真正的计划尚未公开', '监控和现场证词能否形成完整证据链'],
     constraints: ['不要推翻已发生事实', '每段剧情保持高冲突和强反转', '结局必须在第三段收束'],
     architecture: buildDefaultArchitectureState(userPrompt)
   };

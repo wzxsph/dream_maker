@@ -14,6 +14,12 @@ export const STORY_ARCHITECTURE = {
     mode: '伪开放式',
     rule: '玩家选择改变手段、代价、谁先暴露，不改变故事必须收束的结局走向'
   },
+  quality_contract: {
+    logic: '每个新事实必须由上一节点的动作、可见物件、人物动机或已埋伏笔推出，禁止凭空降临关键证据或关键人物',
+    realism: '按常见网文爽点写，但现实关系、职场/家庭/校园流程要自洽，不要让总监、律师、警察、监控、系统等工具无铺垫瞬间解决问题',
+    character: '压力源要有明确动机和顾虑，主角要主动抓证据、试探、谈判或反击，不能只等外力救场',
+    warmth: '冲突可以强，但避免无意义羞辱、过度惨烈和猎奇；结尾给主角体面、希望或情绪释放'
+  },
   fun_loop: [
     '每个节点先给可见压力，再给一个信息差或反转',
     '每个选项都是具体动作，禁止只写继续、下一步、进入下一幕',
@@ -102,6 +108,7 @@ export function buildDefaultArchitectureState(userPrompt = '') {
     time_lock: STORY_ARCHITECTURE.scene_contract.timebox,
     cast_limit: STORY_ARCHITECTURE.scene_contract.cast_limit,
     choice_contract: STORY_ARCHITECTURE.choice_contract.rule,
+    quality_contract: STORY_ARCHITECTURE.quality_contract.logic,
     ending_lane: endingLane.id,
     ending_promise: endingLane.rule
   };
@@ -124,6 +131,10 @@ export function buildArchitecturePromptSection({ nextChunkIndex = null } = {}) {
 - 角色锁：${STORY_ARCHITECTURE.scene_contract.cast_limit}
 - 叙事锁：${STORY_ARCHITECTURE.scene_contract.world_rule}
 - 交互方式：${STORY_ARCHITECTURE.choice_contract.mode}。${STORY_ARCHITECTURE.choice_contract.rule}
+- 因果锁：${STORY_ARCHITECTURE.quality_contract.logic}
+- 现实感：${STORY_ARCHITECTURE.quality_contract.realism}
+- 人物锁：${STORY_ARCHITECTURE.quality_contract.character}
+- 情绪底色：${STORY_ARCHITECTURE.quality_contract.warmth}
 - 爽感循环：${STORY_ARCHITECTURE.fun_loop.join('；')}
 - 结局走向只能从以下三类选一并贯穿全文：
   1. truth_reversal：${STORY_ARCHITECTURE.ending_lanes[0].rule}

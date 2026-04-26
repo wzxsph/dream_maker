@@ -118,7 +118,7 @@ function normalizeNextNode(nextNode) {
 }
 
 function isGenericChoiceContent(content) {
-  return /^(继续|下一步|继续剧情|继续推进|进入下一幕|进入下一段剧情|下一幕|继续吧)$/i.test(content || '');
+  return /^(next|continue|generate_next|继续|下一步|继续剧情|继续推进|进入下一幕|进入下一段剧情|下一幕|继续吧)$/i.test(content || '');
 }
 
 function buildConcreteChoiceContent(index, total) {
@@ -138,7 +138,7 @@ function buildChoiceContent(nodeId, index = 0) {
     node_5: ['公开手里的关键筹码', '藏住底牌反向试探'],
     node_6_a: ['把优势压到对方面前'],
     node_6_b: ['逼对方先露出破绽'],
-    node_7: ['趁世界恢复流动继续追击'],
+    node_7: ['抓住对方露出的破绽继续追证'],
     node_8: ['公开全部证据完成翻盘', '保留最后底牌逼她坦白'],
     node_9_a: ['当众收回自己的名字'],
     node_9_b: ['亲手关闭这场审判']
@@ -333,6 +333,7 @@ export function reinforceChunkContinuity(result, continuityContext = {}) {
   const sceneKeywords = extractSceneKeywords(currentNodeText);
 
   const alreadyLinked =
+    hasBridgePrefix(existingText) ||
     choiceKeywords.some((word) => existingText.includes(word)) ||
     sceneKeywords.some((word) => existingText.includes(word));
 
@@ -344,7 +345,7 @@ export function reinforceChunkContinuity(result, continuityContext = {}) {
 }
 
 function isSoftBridgeChoice(text) {
-  return /继续|下一|后续|发展|等待|观察|看看|进入|剧情|局面|方向/.test(text || '');
+  return /next|continue|generate|继续|下一|后续|发展|等待|观察|看看|进入|剧情|局面|方向/.test(text || '');
 }
 
 function extractSceneKeywords(text) {
@@ -380,5 +381,9 @@ function buildNaturalBridgeLine(currentNodeText, selectedChoice) {
     return '动作发生得太快，所有人的表情都在这一刻凝住。';
   }
 
-  return '下一秒，眼前的局势悄然转向。';
+  return '眼前的线索终于有了回应。';
+}
+
+function hasBridgePrefix(text) {
+  return /^(倒计时结束的瞬间|短暂的沉默后|你转身的一瞬|你的话音落下|你压下情绪|动作发生得太快|眼前的线索终于有了回应|下一秒|就在这时|话音刚落)/.test(text || '');
 }
